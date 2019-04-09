@@ -5,13 +5,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Docker version available on Taskcluster is pretty old
+DOCKER_MIN_VERSION = '1.18'
 
-def docker_logs(stream):
-    for lines in stream:
-        if 'stream' not in lines:
-            continue
-        for line in filter(None, lines['stream'].splitlines()):
-            logger.info(line)
 
 def build_image(target, args):
     '''
@@ -34,17 +30,17 @@ def build_image(target, args):
     if args.push:
         assert config.has_docker_auth(), 'Missing Docker authentication'
 
-    client = docker.from_env()
-    client.ping()
+    # Setup docker client
+    client = docker.from_env(version=DOCKER_MIN_VERSION)
+    assert client.ping(), 'Docker ping failed'
 
     # Build the image
     logger.info('Building docker image {}'.format(dockerfile))
-    image, stream = client.images.build(
+    image = client.images.build(
         path=target.dir,
         dockerfile=dockerfile,
         tag='{}:{}'.format(config.docker['repository'], args.push) if args.push else '',
     )
-    docker_logs(stream)
     logger.info('Built image {}'.format(image.id))
 
     # Write the produced image
@@ -56,7 +52,7 @@ def build_image(target, args):
 
     # Push the produced image
     if args.push:
-        stream = client.images.push(
+        client.images.push(
             repository=config.docker['repository'],
             tag=args.push,
             auth_config={
@@ -64,5 +60,4 @@ def build_image(target, args):
                 'password': config.docker['password'],
             }
         )
-        docker_logs(stream)
         logger.info('Pushed image to {}'.format(args.push))
