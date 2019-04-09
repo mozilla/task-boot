@@ -1,6 +1,8 @@
 import argparse
 from taskboot.build import build_image
+from taskboot.target import Target
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,6 +23,23 @@ def main():
         type=str,
         help='Taskcluster secret path',
     )
+    parser.add_argument(
+        '--git-repository',
+        type=str,
+        default=os.environ.get('GIT_REPOSITORY'),
+        help='Target git repository',
+    )
+    parser.add_argument(
+        '--git-revision',
+        type=str,
+        default=os.environ.get('GIT_REVISION', 'master'),
+        help='Target git revision',
+    )
+    parser.add_argument(
+        '--target',
+        type=str,
+        help='Target directory to use a local project',
+    )
     commands = parser.add_subparsers(help='sub-command help')
     parser.set_defaults(func=usage)
 
@@ -31,9 +50,12 @@ def main():
     build.add_argument('--push', type=str, help='Path to push on configured repository')
     build.set_defaults(func=build_image)
 
-    # Call the assigned function
+    # Always load the target
     args = parser.parse_args()
-    args.func(args)
+    target = Target(args)
+
+    # Call the assigned function
+    args.func(target, args)
 
 
 if __name__ == '__main__':

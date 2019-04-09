@@ -1,7 +1,7 @@
 FROM python:3-alpine
 
-# We need docker to build target images
-RUN apk add docker
+# We need git & docker to build target images
+RUN apk add docker git
 
 # Add taskboot
 COPY dist/task-boot*.tar.gz /tmp/taskboot.tar.gz

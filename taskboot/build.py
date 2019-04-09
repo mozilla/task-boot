@@ -6,16 +6,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def build_image(args):
+def docker_logs(stream):
+    for lines in stream:
+        if 'stream' not in lines:
+            continue
+        for line in filter(None, lines['stream'].splitlines()):
+            logger.info(line)
+
+def build_image(target, args):
     '''
     Build a docker image and allow save/push
     '''
     # Load config from file/secret
     config = Configuration(args)
 
-    # Check the dockerfile is available
-    dockerfile = os.path.realpath(args.dockerfile)
-    assert os.path.exists(dockerfile), 'Missing Dockerfile in {}'.format(dockerfile)
+    # Check the dockerfile is available in target
+    dockerfile = target.check_path(args.dockerfile)
 
     # Check the output is writable
     output = os.path.realpath(args.write) if args.write else None
@@ -32,10 +38,13 @@ def build_image(args):
     client.ping()
 
     # Build the image
-    image, logs = client.images.build(
-        fileobj=open(dockerfile, 'rb'),
+    logger.info('Building docker image {}'.format(dockerfile))
+    image, stream = client.images.build(
+        path=target.dir,
+        dockerfile=dockerfile,
         tag='{}:{}'.format(config.docker['repository'], args.push) if args.push else '',
     )
+    docker_logs(stream)
     logger.info('Built image {}'.format(image.id))
 
     # Write the produced image
@@ -47,7 +56,7 @@ def build_image(args):
 
     # Push the produced image
     if args.push:
-        out = client.images.push(
+        stream = client.images.push(
             repository=config.docker['repository'],
             tag=args.push,
             auth_config={
@@ -55,5 +64,5 @@ def build_image(args):
                 'password': config.docker['password'],
             }
         )
-        logger.info(out)
+        docker_logs(stream)
         logger.info('Pushed image to {}'.format(args.push))
