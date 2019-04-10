@@ -27,8 +27,6 @@ class Target(object):
             logger.warn('No target cloned')
 
     def clone(self, repository, revision):
-        assert repository.startswith('git://'), \
-            'Git repository must start with git:// scheme'
         logger.info('Cloning {} @ {}'.format(repository, revision))
 
         # Clone
