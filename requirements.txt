@@ -1,5 +1,2 @@
-# The docker engine on taskcluster is 1.18 (pretty old !)
-docker==2.7.0
-
 taskcluster==7.0.1
 pyyaml==5.1

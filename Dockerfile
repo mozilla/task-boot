@@ -1,6 +1,9 @@
 FROM python:3-alpine
 
-# Setup deps
+# Add img
+RUN apk add img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
+
+# Setup other deps
 RUN apk add git
 
 # Add taskboot

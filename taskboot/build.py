@@ -1,18 +1,18 @@
-import docker
+import uuid
 import os.path
 from taskboot.config import Configuration
+from taskboot.docker import Docker
 import logging
 
 logger = logging.getLogger(__name__)
-
-# Docker version available on Taskcluster is pretty old
-DOCKER_MIN_VERSION = '1.18'
 
 
 def build_image(target, args):
     '''
     Build a docker image and allow save/push
     '''
+    docker = Docker()
+
     # Load config from file/secret
     config = Configuration(args)
 
@@ -20,44 +20,38 @@ def build_image(target, args):
     dockerfile = target.check_path(args.dockerfile)
 
     # Check the output is writable
-    output = os.path.realpath(args.write) if args.write else None
-    if output:
+    output = None
+    if args.write:
+        output = os.path.realpath(args.write)
+        assert output.lower().endswith('.tar'), 'Destination path must ends in .tar'
         assert os.access(os.path.dirname(output), os.W_OK | os.W_OK), \
             'Destination is not writable'
-        assert output.lower().endswith('.tar'), 'Destination path must ends in .tar'
 
-    # Check we have docker auth
     if args.push:
+        # Check we have docker auth
+        # and build the remote tag
         assert config.has_docker_auth(), 'Missing Docker authentication'
+        tag = '{}/{}:{}'.format(config.docker['registry'], config.docker['repository'], args.push)
 
-    # Setup docker client
-    client = docker.from_env(version=DOCKER_MIN_VERSION)
-    assert client.ping(), 'Docker ping failed'
+        # Login on docker
+        docker.login(
+            config.docker['registry'],
+            config.docker['username'],
+            config.docker['password'],
+        )
+    else:
+        # Create a local tag
+        tag = 'taskboot-{}'.format(uuid.uuid4())
+
+    logger.info('Will produce image {}'.format(tag))
 
     # Build the image
-    logger.info('Building docker image {}'.format(dockerfile))
-    image = client.images.build(
-        path=target.dir,
-        dockerfile=dockerfile,
-        tag='{}:{}'.format(config.docker['repository'], args.push) if args.push else '',
-    )
-    logger.info('Built image {}'.format(image.id))
+    docker.build(target.dir, dockerfile, tag)
 
     # Write the produced image
-    if output is not None:
-        with open(output, 'wb') as f:
-            for chunk in image.save():
-                f.write(chunk)
-        logger.info('Saved image in {}'.format(output))
+    if output:
+        docker.save(tag, output)
 
     # Push the produced image
     if args.push:
-        client.images.push(
-            repository=config.docker['repository'],
-            tag=args.push,
-            auth_config={
-                'username': config.docker['username'],
-                'password': config.docker['password'],
-            }
-        )
-        logger.info('Pushed image to {}'.format(args.push))
+        docker.push(tag)

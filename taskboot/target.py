@@ -33,7 +33,7 @@ class Target(object):
 
         # Clone
         cmd = [
-            'git', 'clone',
+            'git', 'clone', '--quiet',
             repository,
             self.dir,
         ]
