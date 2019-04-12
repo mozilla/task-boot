@@ -8,7 +8,8 @@ build:
 taskcluster-build:
 	# Used by Taskcluster build
 	img build --no-console -t $(TAG):latest $(ROOT_DIR)
-	img save --format docker -o /image.tar $(TAG):latest
+	img save -o /oci.tar $(TAG):latest
+	skopeo copy oci-archive:///oci.tar docker-archive:///image.tar
 	zstd /image.tar
 
 publish:
