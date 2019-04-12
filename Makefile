@@ -9,6 +9,7 @@ taskcluster-build:
 	# Used by Taskcluster build
 	img build --no-console -t $(TAG):latest $(ROOT_DIR)
 	img save -o /image.tar $(TAG):latest
+	zstd /image.tar
 
 publish:
 	# Using a test repo for now
