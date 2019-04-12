@@ -1,5 +1,6 @@
 import uuid
 import os.path
+import yaml
 from taskboot.config import Configuration
 from taskboot.docker import Docker
 import logging
@@ -39,6 +40,8 @@ def build_image(target, args):
             config.docker['username'],
             config.docker['password'],
         )
+    elif args.tag:
+        tag = args.tag
     else:
         # Create a local tag
         tag = 'taskboot-{}'.format(uuid.uuid4())
@@ -55,3 +58,53 @@ def build_image(target, args):
     # Push the produced image
     if args.push:
         docker.push(tag)
+
+
+def build_compose(target, args):
+    '''
+    Read a compose file and build each image described as buildable
+    '''
+    docker = Docker()
+
+    # Check the dockerfile is available in target
+    composefile = target.check_path(args.composefile)
+
+    # Check compose file has version >= 3.0
+    compose = yaml.load(open(composefile))
+    version = compose.get('version')
+    assert version is not None, 'Missing version in {}'.format(composefile)
+    assert compose['version'].startswith('3.'), \
+        'Only docker compose version 3 is supported'
+
+    # Check output folder
+    output = None
+    if args.write:
+        output = os.path.realpath(args.write)
+        os.makedirs(output, exist_ok=True)
+        logger.info('Will write images in {}'.format(output))
+
+    # Load services
+    services = compose.get('services')
+    assert isinstance(services, dict), 'Missing services'
+
+    # All paths are relative to the dockerfile folder
+    root = os.path.dirname(composefile)
+
+    for name, service in services.items():
+        build = service.get('build')
+        if build is None:
+            logger.info('Skipping service {}, no build declaration'.format(name))
+            continue
+
+        # Build the image
+        logger.info('Building image for service {}'.format(name))
+        context = os.path.realpath(os.path.join(root, build.get('context', '.')))
+        dockerfile = os.path.realpath(os.path.join(context, build.get('dockerfile', 'Dockerfile')))
+        tag = service.get('image', name)
+        docker.build(context, dockerfile, tag)
+
+        # Write the produced image
+        if output:
+            docker.save(tag, os.path.join(output, '{}.tar'.format(name)))
+
+    logger.info('Compose file fully processed.')
