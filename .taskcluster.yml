@@ -44,8 +44,8 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing &&
-            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} &&
+          - "apk add make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             make taskcluster-build"
         artifacts:
           public/taskboot/image.tar:
