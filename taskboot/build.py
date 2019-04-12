@@ -62,7 +62,7 @@ def build_image(target, args):
 
 def build_compose(target, args):
     '''
-    Read a compose file and build each images described as buildable
+    Read a compose file and build each image described as buildable
     '''
     docker = Docker()
 
@@ -80,8 +80,7 @@ def build_compose(target, args):
     output = None
     if args.write:
         output = os.path.realpath(args.write)
-        if not os.path.isdir(output):
-            os.makedirs(output)
+        os.makedirs(output, exist_ok=True)
         logger.info('Will write images in {}'.format(output))
 
     # Load services
@@ -100,7 +99,7 @@ def build_compose(target, args):
         # Build the image
         logger.info('Building image for service {}'.format(name))
         context = os.path.realpath(os.path.join(root, build.get('context', '.')))
-        dockerfile = os.path.realpath(os.path.join(root, build.get('dockerfile', 'Dockerfile')))
+        dockerfile = os.path.realpath(os.path.join(context, build.get('dockerfile', 'Dockerfile')))
         tag = service.get('image', name)
         docker.build(context, dockerfile, tag)
 
