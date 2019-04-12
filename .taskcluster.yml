@@ -24,7 +24,8 @@ tasks:
       then: ${event.pull_request.head.repo.html_url}
       else: ${event.repository.html_url}
   in:
-    - provisionerId: aws-provisioner-v1
+    - taskId: {$eval: as_slugid("docker_build")}
+      provisionerId: aws-provisioner-v1
       workerType: releng-svc
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
@@ -38,26 +39,61 @@ tasks:
       payload:
         capabilities:
           privileged: true
-        env:
-          GIT_REPOSITORY: ${repository}
-          GIT_REVISION: ${head_rev}
         maxRunTime: 3600
-        image: babadie/taskboot:latest
+        image: python:3-alpine
         command:
-          - taskboot
-          - build
-          - Dockerfile
-          - --write
-          - /image.tar
+          - sh
+          - -lxce
+          - "apk add make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing &&
+            git clone ${repository} /src && cd /src && git checkout ${head_rev} &&
+            make build &&
+            img save mozilla/taskboot -o /image.tar"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
-            path: /base.tar
+            path: /image.tar
             type: file
       scopes:
         - docker-worker:capability:privileged
       metadata:
         name: TaskBoot Docker build
+        description: Taskcluster boot utilities
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
+    - taskId: {$eval: as_slugid("docker_test")}
+      dependencies:
+        - {$eval: as_slugid("docker_build")}
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      extra:
+        github:
+          events:
+            - pull_request.opened
+            - pull_request.reopened
+            - pull_request.synchronize
+            - push
+      payload:
+        capabilities:
+          privileged: true
+        maxRunTime: 3600
+        image:
+          type: task-image
+          path: public/taskboot/image.tar
+          taskId: {$eval: as_slugid("docker_build")}
+        env:
+          GIT_REPOSITORY: ${repository}
+          GIT_REVISION: ${head_rev}
+        command:
+          - taskboot
+          - build
+          - tests/dockerfile.empty
+      scopes:
+        - docker-worker:capability:privileged
+      metadata:
+        name: TaskBoot Docker image test
         description: Taskcluster boot utilities
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
