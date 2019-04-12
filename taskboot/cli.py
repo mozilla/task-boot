@@ -60,6 +60,7 @@ def main():
         help='Path to docker-compose.yml to use',
         default='docker-compose.yml',
     )
+    compose.add_argument('--write', type=str, help='Directory to write the docker images')
     compose.set_defaults(func=build_compose)
 
     # Always load the target

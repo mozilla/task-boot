@@ -76,6 +76,14 @@ def build_compose(target, args):
     assert compose['version'].startswith('3.'), \
         'Only docker compose version 3 is supported'
 
+    # Check output folder
+    output = None
+    if args.write:
+        output = os.path.realpath(args.write)
+        if not os.path.isdir(output):
+            os.makedirs(output)
+        logger.info('Will write images in {}'.format(output))
+
     # Load services
     services = compose.get('services')
     assert isinstance(services, dict), 'Missing services'
@@ -95,5 +103,9 @@ def build_compose(target, args):
         dockerfile = os.path.realpath(os.path.join(root, build.get('dockerfile', 'Dockerfile')))
         tag = service.get('image', name)
         docker.build(context, dockerfile, tag)
+
+        # Write the produced image
+        if output:
+            docker.save(tag, os.path.join(output, '{}.tar'.format(name)))
 
     logger.info('Compose file fully processed.')
