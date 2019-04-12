@@ -45,9 +45,8 @@ tasks:
           - sh
           - -lxce
           - "apk add make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing &&
-            git clone ${repository} /src && cd /src && git checkout ${head_rev} &&
-            make build &&
-            img save mozilla/taskboot -o /image.tar"
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} &&
+            make taskcluster-build"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
