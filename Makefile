@@ -8,7 +8,7 @@ build:
 taskcluster-build:
 	# Used by Taskcluster build
 	img build --no-console -t $(TAG):latest $(ROOT_DIR)
-	img save -o /image.tar $(TAG):latest
+	img save --format oci -o /image.tar $(TAG):latest
 	zstd /image.tar
 
 publish:
