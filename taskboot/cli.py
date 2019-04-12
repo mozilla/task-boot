@@ -1,5 +1,5 @@
 import argparse
-from taskboot.build import build_image
+from taskboot.build import build_image, build_compose
 from taskboot.target import Target
 import logging
 import os
@@ -50,6 +50,17 @@ def main():
     build.add_argument('--push', type=str, help='Path to push on configured repository')
     build.add_argument('--tag', type=str, help='Use a specific tag on this image')
     build.set_defaults(func=build_image)
+
+    # Build images from a docker-compose.yml file
+    compose = commands.add_parser('build-compose', help='Build images from a docker-compose flie')
+    compose.add_argument(
+        '--compose-file', '-c',
+        dest='composefile',
+        type=str,
+        help='Path to docker-compose.yml to use',
+        default='docker-compose.yml',
+    )
+    compose.set_defaults(func=build_compose)
 
     # Always load the target
     args = parser.parse_args()

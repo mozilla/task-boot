@@ -1,5 +1,6 @@
 import uuid
 import os.path
+import yaml
 from taskboot.config import Configuration
 from taskboot.docker import Docker
 import logging
@@ -57,3 +58,42 @@ def build_image(target, args):
     # Push the produced image
     if args.push:
         docker.push(tag)
+
+
+def build_compose(target, args):
+    '''
+    Read a compose file and build each images described as buildable
+    '''
+    docker = Docker()
+
+    # Check the dockerfile is available in target
+    composefile = target.check_path(args.composefile)
+
+    # Check compose file has version >= 3.0
+    compose = yaml.load(open(composefile))
+    version = compose.get('version')
+    assert version is not None, 'Missing version in {}'.format(composefile)
+    assert compose['version'].startswith('3.'), \
+        'Only docker compose version 3 is supported'
+
+    # Load services
+    services = compose.get('services')
+    assert isinstance(services, dict), 'Missing services'
+
+    # All paths are relative to the dockerfile folder
+    root = os.path.dirname(composefile)
+
+    for name, service in services.items():
+        build = service.get('build')
+        if build is None:
+            logger.info('Skipping service {}, no build declaration'.format(name))
+            continue
+
+        # Build the image
+        logger.info('Building image for service {}'.format(name))
+        context = os.path.realpath(os.path.join(root, build.get('context', '.')))
+        dockerfile = os.path.realpath(os.path.join(root, build.get('dockerfile', 'Dockerfile')))
+        tag = service.get('image', name)
+        docker.build(context, dockerfile, tag)
+
+    logger.info('Compose file fully processed.')
