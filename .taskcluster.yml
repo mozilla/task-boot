@@ -80,7 +80,7 @@ tasks:
         maxRunTime: 3600
         image:
           type: task-image
-          path: public/taskboot/image.tar
+          path: public/taskboot/image.tar.zst
           taskId: {$eval: as_slugid("docker_build")}
         env:
           GIT_REPOSITORY: ${repository}
