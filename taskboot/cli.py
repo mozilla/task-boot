@@ -48,6 +48,7 @@ def main():
     build.add_argument('dockerfile', type=str, help='Path to Dockerfile to build')
     build.add_argument('--write', type=str, help='Path to write the docker image')
     build.add_argument('--push', type=str, help='Path to push on configured repository')
+    build.add_argument('--tag', type=str, help='Use a specific tag on this image')
     build.set_defaults(func=build_image)
 
     # Always load the target

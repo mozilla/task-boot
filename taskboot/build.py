@@ -39,6 +39,8 @@ def build_image(target, args):
             config.docker['username'],
             config.docker['password'],
         )
+    elif args.tag:
+        tag = args.tag
     else:
         # Create a local tag
         tag = 'taskboot-{}'.format(uuid.uuid4())
