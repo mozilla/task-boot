@@ -74,16 +74,20 @@ tasks:
           privileged: true
         maxRunTime: 3600
         image: python:3-alpine
+        env:
+          # Using a test repo for now
+          TAG: babadie/taskboot
         command:
           - sh
           - -lxce
-          - "apk add zstd make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+          - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            make taskcluster-build"
+            pip install . &&
+            taskboot --target=/src build --tag=$(TAG):latest --write=/image.tar"
         artifacts:
-          public/taskboot/image.tar.zst:
+          public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
-            path: /image.tar.zst
+            path: /image.tar
             type: file
       scopes:
         - docker-worker:capability:privileged
