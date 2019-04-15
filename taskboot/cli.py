@@ -21,6 +21,7 @@ def main():
     parser.add_argument(
         '--secret',
         type=str,
+        default=os.environ.get('TASKCLUSTER_SECRET'),
         help='Taskcluster secret path',
     )
     parser.add_argument(
