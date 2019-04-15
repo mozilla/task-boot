@@ -47,7 +47,7 @@ tasks:
           - -lxce
           - "apk add git --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --quiet -r requirements-tests.txt &&
+            pip install --quiet -r requirements-tests.txt . &&
             flake8 && pytest -v"
       metadata:
         name: TaskBoot code checks
