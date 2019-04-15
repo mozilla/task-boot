@@ -91,6 +91,7 @@ tasks:
               path: /image.tar
               type: file
         scopes:
+          - secrets:get:project/relman/taskboot/deploy
           - docker-worker:capability:privileged
         metadata:
           name: TaskBoot Docker build and latest release
