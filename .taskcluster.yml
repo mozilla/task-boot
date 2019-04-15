@@ -55,7 +55,7 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
-    - $if: 'tasks_for == "github-push" && head_branch == "latest"'
+    - $if: 'tasks_for == "github-push" && head_branch == "refs/heads/latest"'
       then:
         taskId: {$eval: as_slugid("docker_build")}
         dependencies:
