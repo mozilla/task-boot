@@ -69,6 +69,9 @@ tasks:
             events:
               - push
         payload:
+          features:
+            # Needed for access to secret
+            taskclusterProxy: true
           capabilities:
             privileged: true
           maxRunTime: 3600
@@ -76,7 +79,6 @@ tasks:
           env:
             # Using a test repo for now
             TAG: babadie/taskboot
-
             TASKCLUSTER_SECRET: project/relman/taskboot/deploy
           command:
             - sh
