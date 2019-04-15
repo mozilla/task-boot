@@ -24,7 +24,40 @@ tasks:
       then: ${event.pull_request.head.repo.html_url}
       else: ${event.repository.html_url}
   in:
+    - taskId: {$eval: as_slugid("code_checks")}
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      extra:
+        github:
+          events:
+            - pull_request.opened
+            - pull_request.reopened
+            - pull_request.synchronize
+            - push
+      payload:
+        maxRunTime: 3600
+        image: python:3-alpine
+        env:
+          GIT_REPOSITORY: ${repository}
+          GIT_REVISION: ${head_rev}
+        command:
+          - sh
+          - -lxce
+          - "apk add git --quiet &&
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+            pip install -r requirements-tests.txt &&
+            flake8 && pytest -v"
+      metadata:
+        name: TaskBoot code checks
+        description: Taskcluster boot utilities: code linting & unit tests
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
     - taskId: {$eval: as_slugid("docker_build")}
+      dependencies:
+        - {$eval: as_slugid("code_checks")}
       provisionerId: aws-provisioner-v1
       workerType: releng-svc
       created: {$fromNow: ''}
@@ -44,7 +77,7 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add skopeo zstd make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+          - "apk add zstd make git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             make taskcluster-build"
         artifacts:
@@ -56,43 +89,6 @@ tasks:
         - docker-worker:capability:privileged
       metadata:
         name: TaskBoot Docker build
-        description: Taskcluster boot utilities
-        owner: bastien@mozilla.com
-        source: https://github.com/mozilla/task-boot
-
-    - taskId: {$eval: as_slugid("docker_test")}
-      dependencies:
-        - {$eval: as_slugid("docker_build")}
-      provisionerId: aws-provisioner-v1
-      workerType: releng-svc
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
-      payload:
-        capabilities:
-          privileged: true
-        maxRunTime: 3600
-        image:
-          type: task-image
-          path: public/taskboot/image.tar.zst
-          taskId: {$eval: as_slugid("docker_build")}
-        env:
-          GIT_REPOSITORY: ${repository}
-          GIT_REVISION: ${head_rev}
-        command:
-          - taskboot
-          - build
-          - tests/dockerfile.empty
-      scopes:
-        - docker-worker:capability:privileged
-      metadata:
-        name: TaskBoot Docker image test
-        description: Taskcluster boot utilities
+        description: Taskcluster boot utilities: build docker image
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
