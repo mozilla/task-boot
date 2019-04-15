@@ -94,7 +94,7 @@ tasks:
           - docker-worker:capability:privileged
         metadata:
           name: TaskBoot Docker build and latest release
-          description: Taskcluster boot utilities - build docker image
+          description: Taskcluster boot utilities - build docker image and push it on docker repo
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/task-boot
 
@@ -121,6 +121,7 @@ tasks:
           env:
             # Using a test repo for now
             TAG: babadie/taskboot
+            BRANCH: ${head_branch}
           command:
             - sh
             - -lxce
