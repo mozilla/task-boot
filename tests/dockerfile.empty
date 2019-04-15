@@ -1,0 +1,6 @@
+FROM alpine
+
+RUN mkdir -p /etc
+RUN echo 'Hello from taskboot' /etc/boot
+
+CMD ['cat', '/etc/boot']

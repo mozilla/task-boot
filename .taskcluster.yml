@@ -1,0 +1,98 @@
+version: 1
+policy:
+  pullRequests: public
+tasks:
+  $let:
+    head_branch:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.ref}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.ref}
+        else: ${event.release.target_commitish}
+
+    head_rev:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.sha}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.release.tag_name}
+
+    repository:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+  in:
+    - taskId: {$eval: as_slugid("code_checks")}
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      extra:
+        github:
+          events:
+            - pull_request.opened
+            - pull_request.reopened
+            - pull_request.synchronize
+            - push
+      payload:
+        maxRunTime: 3600
+        image: python:3-alpine
+        env:
+          GIT_REPOSITORY: ${repository}
+          GIT_REVISION: ${head_rev}
+        command:
+          - sh
+          - -lxce
+          - "apk add git --quiet &&
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+            pip install --quiet -r requirements-tests.txt . &&
+            flake8 && pytest -v"
+      metadata:
+        name: TaskBoot code checks
+        description: Taskcluster boot utilities - code linting & unit tests
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
+    - taskId: {$eval: as_slugid("docker_build")}
+      dependencies:
+        - {$eval: as_slugid("code_checks")}
+      provisionerId: aws-provisioner-v1
+      workerType: releng-svc
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      extra:
+        github:
+          events:
+            - pull_request.opened
+            - pull_request.reopened
+            - pull_request.synchronize
+            - push
+      payload:
+        capabilities:
+          privileged: true
+        maxRunTime: 3600
+        image: python:3-alpine
+        env:
+          # Using a test repo for now
+          TAG: babadie/taskboot
+        command:
+          - sh
+          - -lxce
+          - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+            pip install . &&
+            taskboot --target=/src build --tag=$TAG:latest --write /image.tar Dockerfile"
+        artifacts:
+          public/taskboot/image.tar:
+            expires: {$fromNow: '2 weeks'}
+            path: /image.tar
+            type: file
+      scopes:
+        - docker-worker:capability:privileged
+      metadata:
+        name: TaskBoot Docker build
+        description: Taskcluster boot utilities - build docker image
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
