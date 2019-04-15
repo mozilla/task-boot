@@ -51,7 +51,7 @@ tasks:
             flake8 && pytest -v"
       metadata:
         name: TaskBoot code checks
-        description: Taskcluster boot utilities: code linting & unit tests
+        description: Taskcluster boot utilities - code linting & unit tests
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
@@ -89,6 +89,6 @@ tasks:
         - docker-worker:capability:privileged
       metadata:
         name: TaskBoot Docker build
-        description: Taskcluster boot utilities: build docker image
+        description: Taskcluster boot utilities - build docker image
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
