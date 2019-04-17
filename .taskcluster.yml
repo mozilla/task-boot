@@ -77,8 +77,7 @@ tasks:
           maxRunTime: 3600
           image: python:3-alpine
           env:
-            # Using a test repo for now
-            TAG: babadie/taskboot
+            TAG: mozilla/taskboot
             TASKCLUSTER_SECRET: project/relman/taskboot/deploy
           command:
             - sh
@@ -122,8 +121,7 @@ tasks:
           maxRunTime: 3600
           image: python:3-alpine
           env:
-            # Using a test repo for now
-            TAG: babadie/taskboot
+            TAG: mozilla/taskboot
             BRANCH: ${head_branch}
           command:
             - sh

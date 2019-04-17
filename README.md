@@ -9,7 +9,7 @@ Taskcluster + Github
 1. Create an account or login on [Taskcluster tools](https://tools.taskcluster.net/)
 2. Go to the [Github quick-start](https://tools.taskcluster.net/quickstart) page
 3. Fill in the form related to your github repository
-5. Specify the `payload.image` as `babadie/taskboot:latest`
+5. Specify the `payload.image` as `mozilla/taskboot:latest`
 4. Specify the `payload.command` as 
 ```
 command:
