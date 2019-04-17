@@ -1,6 +1,5 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-# Using a test repo for now
-TAG=babadie/taskboot
+TAG=mozilla/taskboot
 VERSION=$(shell cat $(ROOT_DIR)/VERSION)
 
 build:
