@@ -8,7 +8,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 
 
-def usage(args):
+def usage(target, args):
     print('Here is how to use taskboot...')
 
 
