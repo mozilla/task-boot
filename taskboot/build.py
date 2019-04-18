@@ -100,6 +100,8 @@ def build_compose(target, args):
         context = os.path.realpath(os.path.join(root, build.get('context', '.')))
         dockerfile = os.path.realpath(os.path.join(context, build.get('dockerfile', 'Dockerfile')))
         tag = service.get('image', name)
+        if args.registry:
+            tag = '{}/{}'.format(args.registry, tag)
         docker.build(context, dockerfile, tag)
 
         # Write the produced image
