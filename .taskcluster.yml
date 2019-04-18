@@ -124,11 +124,6 @@ tasks:
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
               pip install --quiet . &&
               taskboot push-artifact"
-          artifacts:
-            public/taskboot/image.tar:
-              expires: {$fromNow: '2 weeks'}
-              path: /image.tar
-              type: file
         scopes:
           - secrets:get:project/relman/taskboot/deploy
         metadata:
