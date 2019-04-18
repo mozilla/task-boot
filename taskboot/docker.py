@@ -81,6 +81,7 @@ class Skopeo(Tool):
         _, self.auth_file = tempfile.mkstemp(suffix='-skopeo.json')
         pair = '{}:{}'.format(username, password).encode('utf-8')
         server = 'https://{}/v1'.format(registry)
+        self.registry = registry
         auth = {
             'auths': {
                 server: {
@@ -107,6 +108,10 @@ class Skopeo(Tool):
         assert len(tags) > 0, 'No tags found'
 
         for tag in tags:
+            # Check the registry is in the tag
+            assert tag.startswith(self.registry), \
+                'Invalid tag {} : must use registry {}'.format(tag, self.registry)
+
             logger.info('Pushing image as {}'.format(tag))
             cmd = [
                 'copy',

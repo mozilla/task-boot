@@ -81,7 +81,7 @@ tasks:
           - -lxce
           - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install . &&
+            pip install --quiet . &&
             taskboot --target=/src build --tag=$TAG:latest --write /image.tar Dockerfile"
         artifacts:
           public/taskboot/image.tar:
@@ -122,7 +122,7 @@ tasks:
             - -lxce
             - "apk add git skopeo --quiet &&
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-              pip install . &&
+              pip install --quiet . &&
               taskboot push-artifact"
           artifacts:
             public/taskboot/image.tar:
