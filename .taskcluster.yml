@@ -96,7 +96,7 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
-    - $if: 'tasks_for == "github-push" && head_branch == "refs/heads/push-artifact"'
+    - $if: 'tasks_for == "github-push" && head_branch == "refs/heads/master"'
       then:
         taskId: {$eval: as_slugid("docker_push")}
         dependencies:
