@@ -76,7 +76,6 @@ tasks:
         image: python:3-alpine
         env:
           TAG: mozilla/taskboot
-          BRANCH: ${head_branch}
         command:
           - sh
           - -lxce
@@ -117,7 +116,6 @@ tasks:
           maxRunTime: 3600
           image: python:3-alpine
           env:
-            TAG: mozilla/taskboot
             TASKCLUSTER_SECRET: project/relman/taskboot/deploy
           command:
             - sh
