@@ -1,8 +1,30 @@
 import requests
 import logging
+import time
 
 
 logger = logging.getLogger(__name__)
+
+
+def retry(operation,
+          retries=5,
+          wait_between_retries=30,
+          exception_to_break=None,
+          ):
+    '''
+    Retry an operation several times
+    '''
+    for i in range(retries):
+        try:
+            logger.debug('Trying {}/{}'.format(i+1, retries))
+            return operation()
+        except Exception as e:
+            logger.warn('Try failed: {}'.format(e))
+            if exception_to_break and isinstance(e, exception_to_break):
+                raise
+            if i == retries - 1:
+                raise
+            time.sleep(wait_between_retries)
 
 
 def download_progress(url, path):

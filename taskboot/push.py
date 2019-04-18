@@ -4,7 +4,7 @@ import tempfile
 from fnmatch import fnmatch
 from taskboot.config import Configuration
 from taskboot.docker import Skopeo
-from taskboot.utils import download_progress
+from taskboot.utils import download_progress, retry
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def push_artifact(queue, skopeo, task_id, artifact_name):
 
     # Download the artifact in a temporary file
     _, path = tempfile.mkstemp(suffix='-taskboot.tar')
-    download_progress(url, path)
+    retry(lambda: download_progress(url, path))
 
     # Push image using skopeo
     skopeo.push_archive(path)
