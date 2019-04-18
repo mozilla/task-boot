@@ -6,6 +6,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 TASKCLUSTER_DEFAULT_URL = 'https://taskcluster.net'
+TASKCLUSTER_DASHBOARD_URL = 'https://tools.taskcluster.net'
 
 
 class Configuration(object):

@@ -1,5 +1,5 @@
 import argparse
-from taskboot.build import build_image, build_compose
+from taskboot.build import build_image, build_compose, build_hook
 from taskboot.push import push_artifacts
 from taskboot.target import Target
 import logging
@@ -8,7 +8,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 
 
-def usage(args):
+def usage(target, args):
     print('Here is how to use taskboot...')
 
 
@@ -86,6 +86,25 @@ def main():
         help='Filter applied to artifacts paths, supports fnmatch syntax.',
     )
     artifacts.set_defaults(func=push_artifacts)
+
+    # Ensure the given hook is up-to-date with the given definition
+    hooks = commands.add_parser('build-hook', help='Ensure the given hook is up-to-date with the given definition')
+    hooks.add_argument(
+        "hook_file",
+        type=str,
+        help="Path to the hook definition",
+    )
+    hooks.add_argument(
+        "hook_group_id",
+        type=str,
+        help="Hook group ID",
+    )
+    hooks.add_argument(
+        "hook_id",
+        type=str,
+        help="Hook ID",
+    )
+    hooks.set_defaults(func=build_hook)
 
     # Always load the target
     args = parser.parse_args()
