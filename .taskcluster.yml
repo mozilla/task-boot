@@ -75,14 +75,14 @@ tasks:
         maxRunTime: 3600
         image: python:3-alpine
         env:
-          TAG: mozilla/taskboot
+          TAG: registry.hub.docker.com/mozilla/taskboot:latest
         command:
           - sh
           - -lxce
           - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --quiet . &&
-            taskboot --target=/src build --tag=$TAG:latest --write /image.tar Dockerfile"
+            taskboot --target=/src build --tag=$TAG --write /image.tar Dockerfile"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
