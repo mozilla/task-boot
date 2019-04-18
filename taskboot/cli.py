@@ -1,5 +1,6 @@
 import argparse
 from taskboot.build import build_image, build_compose
+from taskboot.push import push_artifacts
 from taskboot.target import Target
 import logging
 import os
@@ -63,6 +64,22 @@ def main():
     )
     compose.add_argument('--write', type=str, help='Directory to write the docker images')
     compose.set_defaults(func=build_compose)
+
+    # Push docker images produced in other tasks
+    artifacts = commands.add_parser('push-artifact', help='Push docker images produced in dependant tasks')
+    artifacts.add_argument(
+        '--task-id',
+        type=str,
+        default=os.environ.get('TASK_ID'),
+        help='Taskcluster task group to analyse',
+    )
+    artifacts.add_argument(
+        '--artifact-filter',
+        type=str,
+        default='public/**.tar',
+        help='Filter applied to artifacts paths, supports fnmatch syntax.',
+    )
+    artifacts.set_defaults(func=push_artifacts)
 
     # Always load the target
     args = parser.parse_args()
