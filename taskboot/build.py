@@ -28,23 +28,22 @@ def build_image(target, args):
         assert os.access(os.path.dirname(output), os.W_OK | os.W_OK), \
             'Destination is not writable'
 
+    # Build the tag
+    tag = args.tag or 'taskboot-{}'.format(uuid.uuid4())
+    # TODO: check tag is valid
+
     if args.push:
-        # Check we have docker auth
-        # and build the remote tag
         assert config.has_docker_auth(), 'Missing Docker authentication'
-        tag = '{}/{}:{}'.format(config.docker['registry'], config.docker['repository'], args.push)
+        registry = config.docker['registry']
+        if not tag.startswith(registry):
+            tag = '{}/{}'.format(registry, tag)
 
         # Login on docker
         docker.login(
-            config.docker['registry'],
+            registry,
             config.docker['username'],
             config.docker['password'],
         )
-    elif args.tag:
-        tag = args.tag
-    else:
-        # Create a local tag
-        tag = 'taskboot-{}'.format(uuid.uuid4())
 
     logger.info('Will produce image {}'.format(tag))
 

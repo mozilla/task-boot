@@ -55,13 +55,54 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
+    - taskId: {$eval: as_slugid("docker_build")}
+      dependencies:
+        - {$eval: as_slugid("code_checks")}
+      provisionerId: aws-provisioner-v1
+      workerType: releng-svc
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      extra:
+        github:
+          events:
+            - pull_request.opened
+            - pull_request.reopened
+            - pull_request.synchronize
+            - push
+      payload:
+        capabilities:
+          privileged: true
+        maxRunTime: 3600
+        image: python:3-alpine
+        env:
+          TAG: registry.hub.docker.com/mozilla/taskboot:latest
+        command:
+          - sh
+          - -lxce
+          - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+            pip install --quiet . &&
+            taskboot --target=/src build --tag=$TAG --write /image.tar Dockerfile"
+        artifacts:
+          public/taskboot/image.tar:
+            expires: {$fromNow: '2 weeks'}
+            path: /image.tar
+            type: file
+      scopes:
+        - docker-worker:capability:privileged
+      metadata:
+        name: TaskBoot docker build
+        description: Taskcluster boot utilities - build latest docker image
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
     - $if: 'tasks_for == "github-push" && head_branch == "refs/heads/master"'
       then:
-        taskId: {$eval: as_slugid("docker_build")}
+        taskId: {$eval: as_slugid("docker_push")}
         dependencies:
-          - {$eval: as_slugid("code_checks")}
+          - {$eval: as_slugid("docker_build")}
         provisionerId: aws-provisioner-v1
-        workerType: releng-svc
+        workerType: github-worker
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
         extra:
@@ -72,20 +113,17 @@ tasks:
           features:
             # Needed for access to secret
             taskclusterProxy: true
-          capabilities:
-            privileged: true
           maxRunTime: 3600
           image: python:3-alpine
           env:
-            TAG: mozilla/taskboot
             TASKCLUSTER_SECRET: project/relman/taskboot/deploy
           command:
             - sh
             - -lxce
-            - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+            - "apk add git skopeo --quiet &&
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-              pip install . &&
-              taskboot --target=/src build --tag=$TAG:latest --write /image.tar --push=latest Dockerfile"
+              pip install --quiet . &&
+              taskboot push-artifact"
           artifacts:
             public/taskboot/image.tar:
               expires: {$fromNow: '2 weeks'}
@@ -93,52 +131,8 @@ tasks:
               type: file
         scopes:
           - secrets:get:project/relman/taskboot/deploy
-          - docker-worker:capability:privileged
         metadata:
-          name: TaskBoot Docker build and latest release
-          description: Taskcluster boot utilities - build docker image and push it on docker repo
-          owner: bastien@mozilla.com
-          source: https://github.com/mozilla/task-boot
-
-      else:
-        taskId: {$eval: as_slugid("docker_build")}
-        dependencies:
-          - {$eval: as_slugid("code_checks")}
-        provisionerId: aws-provisioner-v1
-        workerType: releng-svc
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '1 hour'}
-        extra:
-          github:
-            events:
-              - pull_request.opened
-              - pull_request.reopened
-              - pull_request.synchronize
-              - push
-        payload:
-          capabilities:
-            privileged: true
-          maxRunTime: 3600
-          image: python:3-alpine
-          env:
-            TAG: mozilla/taskboot
-            BRANCH: ${head_branch}
-          command:
-            - sh
-            - -lxce
-            - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
-              git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-              pip install . &&
-              taskboot --target=/src build --tag=$TAG:latest --write /image.tar Dockerfile"
-          artifacts:
-            public/taskboot/image.tar:
-              expires: {$fromNow: '2 weeks'}
-              path: /image.tar
-              type: file
-        scopes:
-          - docker-worker:capability:privileged
-        metadata:
-          name: TaskBoot Docker build
-          description: Taskcluster boot utilities - build docker image
+          name: TaskBoot docker push
+          description: Taskcluster boot utilities - push docker image
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/task-boot

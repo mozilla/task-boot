@@ -24,7 +24,11 @@ class Configuration(object):
             return self.config[key]
         raise KeyError
 
-    def load_secret(self, name):
+    def get_taskcluster_options(self):
+        '''
+        Helper to get the Taskcluster setup options
+        according to current environment (local or Taskcluster)
+        '''
         options = taskcluster.optionsFromEnvironment()
         proxy_url = os.environ.get('TASKCLUSTER_PROXY_URL')
 
@@ -36,7 +40,10 @@ class Configuration(object):
             # Always have a value in root url
             options['rootUrl'] = TASKCLUSTER_DEFAULT_URL
 
-        secrets = taskcluster.Secrets(options)
+        return options
+
+    def load_secret(self, name):
+        secrets = taskcluster.Secrets(self.get_taskcluster_options())
         logging.info('Loading Taskcluster secret {}'.format(name))
         payload = secrets.get(name)
         assert 'secret' in payload, 'Missing secret value'

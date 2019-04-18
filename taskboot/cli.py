@@ -1,5 +1,6 @@
 import argparse
 from taskboot.build import build_image, build_compose
+from taskboot.push import push_artifacts
 from taskboot.target import Target
 import logging
 import os
@@ -48,7 +49,12 @@ def main():
     build = commands.add_parser('build', help='Build a docker image')
     build.add_argument('dockerfile', type=str, help='Path to Dockerfile to build')
     build.add_argument('--write', type=str, help='Path to write the docker image')
-    build.add_argument('--push', type=str, help='Path to push on configured repository')
+    build.add_argument(
+        '--push',
+        action='store_true',
+        default=False,
+        help='Push after building on configured repository',
+    )
     build.add_argument('--tag', type=str, help='Use a specific tag on this image')
     build.set_defaults(func=build_image)
 
@@ -63,6 +69,22 @@ def main():
     )
     compose.add_argument('--write', type=str, help='Directory to write the docker images')
     compose.set_defaults(func=build_compose)
+
+    # Push docker images produced in other tasks
+    artifacts = commands.add_parser('push-artifact', help='Push docker images produced in dependant tasks')
+    artifacts.add_argument(
+        '--task-id',
+        type=str,
+        default=os.environ.get('TASK_ID'),
+        help='Taskcluster task group to analyse',
+    )
+    artifacts.add_argument(
+        '--artifact-filter',
+        type=str,
+        default='public/**.tar',
+        help='Filter applied to artifacts paths, supports fnmatch syntax.',
+    )
+    artifacts.set_defaults(func=push_artifacts)
 
     # Always load the target
     args = parser.parse_args()
