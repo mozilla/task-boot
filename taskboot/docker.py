@@ -21,9 +21,7 @@ class Tool(object):
 
     def run(self, command, **params):
         command = [self.binary] + command
-        out = subprocess.run(command, **params)
-        assert out.returncode == 0, 'Tool failure for: {}'.format(' '.join(command))
-        return out
+        return subprocess.run(command, check=True, **params)
 
 
 class Docker(Tool):
