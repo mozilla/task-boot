@@ -5,6 +5,7 @@ import json
 import taskcluster
 from taskboot.config import Configuration, TASKCLUSTER_DASHBOARD_URL
 from taskboot.docker import Docker
+from taskboot.utils import retry
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ def build_compose(target, args):
     '''
     Read a compose file and build each image described as buildable
     '''
+    assert args.build_retries > 0, 'Build retries must be a positive integer'
     docker = Docker()
 
     # Check the dockerfile is available in target
@@ -104,7 +106,11 @@ def build_compose(target, args):
         tag = service.get('image', name)
         if args.registry:
             tag = '{}/{}'.format(args.registry, tag)
-        docker.build(context, dockerfile, tag)
+        retry(
+            lambda: docker.build(context, dockerfile, tag),
+            wait_between_retries=1,
+            retries=args.build_retries,
+        )
 
         # Write the produced image
         if output:
