@@ -69,6 +69,12 @@ def main():
     )
     compose.add_argument('--registry', type=str, help='Docker registry to use in images tags')
     compose.add_argument('--write', type=str, help='Directory to write the docker images')
+    compose.add_argument(
+        '--build-retries', '-r',
+        type=int,
+        default=3,
+        help='Number of times taskbook will retry building each image',
+    )
     compose.set_defaults(func=build_compose)
 
     # Push docker images produced in other tasks
