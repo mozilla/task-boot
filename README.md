@@ -1,43 +1,25 @@
-Task Boot
-=========
+TaskBoot
+========
 
-An helper tool to bootstrap Taskcluster usage
+> A Python 3 tool to bootstrap CI/CD workflows in [Taskcluster](https://docs.taskcluster.net) by building and publishing Docker images.
 
-Taskcluster + Github
---------------------
+Features
+--------
 
-1. Create an account or login on [Taskcluster tools](https://tools.taskcluster.net/)
-2. Go to the [Github quick-start](https://tools.taskcluster.net/quickstart) page
-3. Fill in the form related to your github repository
-5. Specify the `payload.image` as `mozilla/taskboot:latest`
-4. Specify the `payload.command` as 
-```
-command:
-	- taskboot
-	- build
-	- path/to/Dockerfile
-```
-5. Copy the produced YAML code and commit it in your repository as `.taskcluster.yml`
-6. Acticate the [Taskcluster Github addon](https://github.com/apps/taskcluster) on your repository
+* clone a git repo
+* build a docker image in a Taskcluster task without `dind`, by using the excellent project [img](https://github.com/genuinetools/img/)
+* push that docker image to a Docker repo, reading credentials from a Taskcluster secret
+* build multiple docker images using a `docker-compose.yml` file
+* build/update a Taskcluster hook
+* write docker images as Taskcluster artifacts
+* use those artifacts in another task to push them (allow for workflows like: build on pull-request and build/push on tag/prod branch)
 
-Roles
------
+Demo
+----
 
-We recommend creating one role per functionality. If you want to build docker images in some steps, and push or dpeloy them in other steps (or maybe on some specific tags or branches), you might create 2 distinct roles as below.
+TaskBoot is used by [bugbug](https://github.com/mozilla/bugbug/) to produce Docker images on pull requests and branch pushes, pushing them only when a tag is created.
 
-TODO: explain the worker type needs and how to get them
+Documentation
+-------------
 
-Build role scopes:
-
-* `docker-worker:capability:privileged` : needed to run the container in privileged mode to allow Docker builds
-* `queue:create-task:aws-provisioner-v1/<WORKER_TYPE>` : needed to create a task in the privileged worker type
-
-Deploy role scopes:
-
-* `secrets:get:path/to/your/secret` : needed to read a secret you manage, and where you store Docker registry credentials
-
-Now you need to assign (or `assume` in Taskcluster linguo) those new roles to the roles used by the Taskcluster Github application:
-
-* `repo:github.com/<GROUP>/<PROJECT>:pull-request` is used when a pull request is created. Generally you only want the build role here
-* `repo:github.com/<GROUP>/<PROJECT>:branch:*` is used when pushing to any branch. You can specify a branch instead of wildcard too.
-* `repo:github.com/<GROUP>/<PROJECT>:tag:*` is used when a tag is created, generally for new releases. You might want to use build & deploy scopes here.
+A more detailed documentation is available in this [project's wiki](https://github.com/mozilla/task-boot/wiki).
