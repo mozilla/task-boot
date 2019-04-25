@@ -17,7 +17,7 @@ def main():
     parser.add_argument(
         '--config',
         type=open,
-        help='Path to local condfiguration/secrets file',
+        help='Path to local configuration/secrets file',
     )
     parser.add_argument(
         '--secret',
@@ -41,6 +41,11 @@ def main():
         '--target',
         type=str,
         help='Target directory to use a local project',
+    )
+    parser.add_argument(
+        '--cache',
+        type=str,
+        help='Path to a local folder used to cache build processes',
     )
     commands = parser.add_subparsers(help='sub-command help')
     parser.set_defaults(func=usage)
