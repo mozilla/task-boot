@@ -7,6 +7,7 @@ import base64
 import tarfile
 import json
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,8 +29,16 @@ class Docker(Tool):
     '''
     Interface to the img tool, replacing docker daemon
     '''
-    def __init__(self):
+    def __init__(self, cache=None):
         super().__init__('img')
+
+        # Setup img state, using or creating a cache folder
+        if cache is not None:
+            self.state = os.path.join(os.path.realpath(cache), 'img')
+            os.makedirs(self.state, exist_ok=True)
+        else:
+            self.state = tempfile.mkdtemp('-img')
+        logger.info('Docker state is using {}'.format(self.state))
 
     def login(self, registry, username, password):
         '''
@@ -37,6 +46,7 @@ class Docker(Tool):
         '''
         cmd = [
             'login',
+            '--state', self.state,
             '--password-stdin',
             '-u', username,
             registry,
@@ -48,6 +58,7 @@ class Docker(Tool):
         logger.info('Building docker image {}'.format(dockerfile))
         self.run([
             'build',
+            '--state', self.state,
             '--no-console',
             '--tag', tag,
             '--file', dockerfile,
@@ -59,13 +70,18 @@ class Docker(Tool):
         logger.info('Saving image {} to {}'.format(tag, path))
         self.run([
             'save',
+            '--state', self.state,
             '--output', path,
             tag,
         ])
 
     def push(self, tag):
         logger.info('Pushing image {}'.format(tag))
-        self.run(['push', tag])
+        self.run([
+            'push',
+            '--state', self.state,
+            tag,
+        ])
 
 
 class Skopeo(Tool):

@@ -15,7 +15,7 @@ def build_image(target, args):
     '''
     Build a docker image and allow save/push
     '''
-    docker = Docker()
+    docker = Docker(cache=args.cache)
 
     # Load config from file/secret
     config = Configuration(args)
@@ -67,7 +67,7 @@ def build_compose(target, args):
     Read a compose file and build each image described as buildable
     '''
     assert args.build_retries > 0, 'Build retries must be a positive integer'
-    docker = Docker()
+    docker = Docker(cache=args.cache)
 
     # Check the dockerfile is available in target
     composefile = target.check_path(args.composefile)
