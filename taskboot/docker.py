@@ -1,3 +1,4 @@
+from dockerfile_parse import DockerfileParser
 import subprocess
 import shutil
 import tempfile
@@ -5,10 +6,16 @@ import logging
 import os
 import base64
 import tarfile
+import re
 import json
 
 
 logger = logging.getLogger(__name__)
+
+# docker.io/mozilla/taskboot:latest  172.3MiB  25 hours ago  About an hour ago  sha256:e339e39884d2a6f44b493e8f135e5275d0e47209b3f990b768228534944db6e7  # noqa
+IMG_LS_REGEX = re.compile(r'([\w\.]+)/(([\w\-_\.]+)/([\w\-_\.]+)):([\w\-_\.]+)\t+([\.\w]+)\t+([\w ]+)\t+([\w ]+)\t+sha256:(\w{64})')  # noqa
+
+IMG_NAME_REGEX = re.compile(r'(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)')
 
 
 class Tool(object):
@@ -53,6 +60,29 @@ class Docker(Tool):
         ]
         self.run(cmd, input=password.encode('utf-8'))
         logger.info('Authenticated on {} as {}'.format(registry, username))
+
+    def list_images(self):
+        '''
+        List images stored in current state
+        Parses the text output into usable dicts
+        '''
+        ls = self.run(['ls', '--state', self.state], stdout=subprocess.PIPE)
+        out = []
+        for line in ls.stdout.splitlines()[1:]:
+            image = IMG_LS_REGEX.search(line.decode('utf-8'))
+            if image is not None:
+                out.append({
+                    'registry': image.group(1),
+                    'repository': image.group(2),
+                    'tag': image.group(5),
+                    'size': image.group(6),
+                    'created': image.group(7),
+                    'updated': image.group(8),
+                    'digest': image.group(9),
+                })
+            else:
+                logger.warn('Did not parse this image: {}'.format(line))
+        return out
 
     def build(self, context_dir, dockerfile, tag):
         logger.info('Building docker image {}'.format(dockerfile))
@@ -135,3 +165,55 @@ class Skopeo(Tool):
             ]
             self.run(cmd)
             logger.info('Push successfull')
+
+
+def parse_image_name(image_name):
+    '''
+    Helper to convert a Docker image name
+    into a tuple (name, tag)
+    Supports formats :
+    * nginx
+    * library/nginx
+    * nginx:latest
+    * myrepo/nginx:v123
+    '''
+    match = IMG_NAME_REGEX.match(image_name)
+    if match is None:
+        return (None, None)
+    return (match.group('name'), match.group('tag') or 'latest')
+
+
+def patch_dockerfile(dockerfile, images):
+    '''
+    Patch an existing Dockerfile to replace FROM image statements
+    by their local images with digests. It supports multi-stage images
+    This is needed to avoid retrieving remote images before checking current img state
+    Bug https://github.com/genuinetools/img/issues/206
+    '''
+    assert os.path.exists(dockerfile), 'Missing dockerfile {}'.format(dockerfile)
+    assert isinstance(images, list)
+    if not images:
+        return
+
+    def _find_replacement(original):
+        # Replace an image name by its local version
+        # when it exists
+        repo, tag = parse_image_name(original)
+        for image in images:
+            if image['repository'] == repo and image['tag'] == tag:
+                local = '{}/{}@sha256:{}'.format(image['registry'], image['repository'], image['digest'])
+                logger.info('Replacing image {} by {}'.format(original, local))
+                return local
+
+        return original
+
+    # Parse the given dockerfile and update its parent images
+    # with local version given by current img state
+    # The FROM statement parsing & replacement is provided
+    # by the DockerfileParser
+    parser = DockerfileParser()
+    parser.content = open(dockerfile).read()
+    logger.info('Initial parent images: {}'.format(' & '.join(parser.parent_images)))
+    parser.parent_images = list(map(_find_replacement, parser.parent_images))
+    with open(dockerfile, 'w') as f:
+        f.write(parser.content)

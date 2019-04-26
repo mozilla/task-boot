@@ -4,7 +4,7 @@ import yaml
 import json
 import taskcluster
 from taskboot.config import Configuration, TASKCLUSTER_DASHBOARD_URL
-from taskboot.docker import Docker
+from taskboot.docker import Docker, patch_dockerfile
 from taskboot.utils import retry
 import logging
 
@@ -103,6 +103,11 @@ def build_compose(target, args):
         logger.info('Building image for service {}'.format(name))
         context = os.path.realpath(os.path.join(root, build.get('context', '.')))
         dockerfile = os.path.realpath(os.path.join(context, build.get('dockerfile', 'Dockerfile')))
+
+        # We need to replace the FROM statements by their local versions
+        # to avoid using the remote repository first
+        patch_dockerfile(dockerfile, docker.list_images())
+
         tag = service.get('image', name)
         if args.registry:
             tag = '{}/{}'.format(args.registry, tag)
