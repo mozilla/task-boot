@@ -212,8 +212,7 @@ def patch_dockerfile(dockerfile, images):
     # The FROM statement parsing & replacement is provided
     # by the DockerfileParser
     parser = DockerfileParser()
+    parser.dockerfile_path = dockerfile
     parser.content = open(dockerfile).read()
     logger.info('Initial parent images: {}'.format(' & '.join(parser.parent_images)))
     parser.parent_images = list(map(_find_replacement, parser.parent_images))
-    with open(dockerfile, 'w') as f:
-        f.write(parser.content)
