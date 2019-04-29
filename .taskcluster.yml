@@ -75,14 +75,18 @@ tasks:
         maxRunTime: 3600
         image: python:3-alpine
         env:
-          TAG: registry.hub.docker.com/mozilla/taskboot:latest
+          TAG: registry.hub.docker.com/mozilla/taskboot
+          VERSION:
+            $if: 'head_branch[:10] == "refs/tags/"'
+            then: {$eval: 'head_branch[10:]' }
+            else: "latest"
         command:
           - sh
           - -lxce
           - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --quiet . &&
-            taskboot --target=/src build --tag=$TAG --write /image.tar Dockerfile"
+            taskboot --target=/src build --tag=$TAG:$VERSION --write /image.tar Dockerfile"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
@@ -96,7 +100,7 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
-    - $if: 'tasks_for == "github-push" && head_branch == "refs/heads/master"'
+    - $if: 'tasks_for == "github-push" && (head_branch == "refs/heads/master" || head_branch[:10] == "refs/tags/")'
       then:
         taskId: {$eval: as_slugid("docker_push")}
         dependencies:
