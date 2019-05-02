@@ -102,6 +102,11 @@ def main():
         default='public/**.tar',
         help='Filter applied to artifacts paths, supports fnmatch syntax.',
     )
+    artifacts.add_argument(
+        '--exclude-filter',
+        type=str,
+        help='If an artifact match the exclude filter it won\'t be uploaded, supports fnmatch syntax.',
+    )
     artifacts.set_defaults(func=push_artifacts)
 
     # Ensure the given hook is up-to-date with the given definition
