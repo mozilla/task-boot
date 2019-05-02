@@ -47,6 +47,7 @@ def push_artifacts(target, args):
 
                 if args.exclude_filter and fnmatch(artifact_name, args.artifact_filter):
                     logger.info('Excluding artifact %s because of exclude filter', artifact_name)
+                    continue
 
                 push_artifact(queue, skopeo, task_id, artifact_name)
 
