@@ -42,8 +42,13 @@ def push_artifacts(target, args):
 
         # Only process the filtered artifacts
         for artifact in task_artifacts['artifacts']:
-            if fnmatch(artifact['name'], args.artifact_filter):
-                push_artifact(queue, skopeo, task_id, artifact['name'])
+            artifact_name = artifact['name']
+            if fnmatch(artifact_name, args.artifact_filter):
+
+                if args.exclude_filter and fnmatch(artifact_name, args.artifact_filter):
+                    logger.info('Excluding artifact %s because of exclude filter', artifact_name)
+
+                push_artifact(queue, skopeo, task_id, artifact_name)
 
     logger.info('All found artifacts were pushed.')
 
