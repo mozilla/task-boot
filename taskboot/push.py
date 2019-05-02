@@ -45,7 +45,7 @@ def push_artifacts(target, args):
             artifact_name = artifact['name']
             if fnmatch(artifact_name, args.artifact_filter):
 
-                if args.exclude_filter and fnmatch(artifact_name, args.artifact_filter):
+                if args.exclude_filter and fnmatch(artifact_name, args.exclude_filter):
                     logger.info('Excluding artifact %s because of exclude filter', artifact_name)
                     continue
 
