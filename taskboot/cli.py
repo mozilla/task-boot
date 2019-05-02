@@ -64,7 +64,7 @@ def main():
     build.set_defaults(func=build_image)
 
     # Build images from a docker-compose.yml file
-    compose = commands.add_parser('build-compose', help='Build images from a docker-compose flie')
+    compose = commands.add_parser('build-compose', help='Build images from a docker-compose file')
     compose.add_argument(
         '--compose-file', '-c',
         dest='composefile',
@@ -79,6 +79,12 @@ def main():
         type=int,
         default=3,
         help='Number of times taskbook will retry building each image',
+    )
+    compose.add_argument(
+        '--build-arg',
+        type=str,
+        action='append',
+        help='Docker build args passed for each builded service',
     )
     compose.set_defaults(func=build_compose)
 
