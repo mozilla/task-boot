@@ -112,7 +112,7 @@ def build_compose(target, args):
         if args.registry:
             tag = '{}/{}'.format(args.registry, tag)
         retry(
-            lambda: docker.build(context, dockerfile, tag),
+            lambda: docker.build(context, dockerfile, tag, args.build_arg),
             wait_between_retries=1,
             retries=args.build_retries,
         )
