@@ -51,7 +51,7 @@ def build_image(target, args):
     logger.info('Will produce image {}'.format(tag))
 
     # Build the image
-    docker.build(target.dir, dockerfile, tag)
+    docker.build(target.dir, dockerfile, tag, args.build_arg)
 
     # Write the produced image
     if output:
