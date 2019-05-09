@@ -65,6 +65,7 @@ def main():
         '--build-arg',
         type=str,
         action='append',
+        default=[],
         help='Docker build args passed the docker command',
     )
     build.set_defaults(func=build_image)
