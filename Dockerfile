@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:experimental
 FROM python:3-alpine
 
+ARG BUILD_DIR=/build
+
 # Add img
 RUN apk add img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
@@ -8,7 +10,11 @@ RUN apk add img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 RUN apk add git skopeo
 
 # Install taskboot from mounted source code
-RUN --mount=type=bind,target=/src/taskboot,readwrite \
-  cd /src/taskboot && python setup.py install
+# Use a dedicated build dir to avoid building in bind mount
+RUN --mount=type=bind,target=/src/taskboot \
+  cd /src/taskboot && \
+  mkdir -p ${BUILD_DIR} && \
+  pip install --build ${BUILD_DIR} . && \
+  rm -rf ${BUILD_DIR}
 
 CMD ["taskboot", "--help"]
