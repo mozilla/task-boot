@@ -61,6 +61,13 @@ def main():
         help='Push after building on configured repository',
     )
     build.add_argument('--tag', type=str, help='Use a specific tag on this image')
+    build.add_argument(
+        '--build-arg',
+        type=str,
+        action='append',
+        default=[],
+        help='Docker build args passed the docker command',
+    )
     build.set_defaults(func=build_image)
 
     # Build images from a docker-compose.yml file
@@ -84,7 +91,7 @@ def main():
         '--build-arg',
         type=str,
         action='append',
-        help='Docker build args passed for each builded service',
+        help='Docker build args passed for each built service',
     )
     compose.set_defaults(func=build_compose)
 
