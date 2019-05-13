@@ -14,7 +14,7 @@ RUN apk add git skopeo
 RUN --mount=type=bind,target=/src/taskboot \
   cd /src/taskboot && \
   mkdir -p ${BUILD_DIR} && \
-  pip install --build ${BUILD_DIR} . && \
+  pip install --no-cache-dir --build ${BUILD_DIR} . && \
   rm -rf ${BUILD_DIR}
 
 CMD ["taskboot", "--help"]
