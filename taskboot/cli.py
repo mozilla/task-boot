@@ -90,6 +90,7 @@ def main():
     compose.add_argument(
         '--build-arg',
         type=str,
+        default=[],
         action='append',
         help='Docker build args passed for each built service',
     )
