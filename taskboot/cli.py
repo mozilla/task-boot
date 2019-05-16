@@ -94,7 +94,7 @@ def main():
         help='Docker build args passed for each built service',
     )
     compose.add_argument(
-        '--service', type=str, help='Build only the specific compose service'
+        '--service', action='append', type=str, help='Build only the specific compose service'
     )
     compose.set_defaults(func=build_compose)
 

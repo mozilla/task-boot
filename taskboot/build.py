@@ -99,7 +99,7 @@ def build_compose(target, args):
             logger.info('Skipping service {}, no build declaration'.format(name))
             continue
 
-        if args.service and name != args.service:
+        if args.service and name not in args.service:
             msg = 'Skipping service {}, building only {}'.format(name, args.service)
             logger.info(msg)
             continue
