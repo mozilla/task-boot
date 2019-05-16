@@ -94,6 +94,13 @@ def main():
         action='append',
         help='Docker build args passed for each built service',
     )
+    compose.add_argument(
+        '--service',
+        type=str,
+        action='append',
+        default=[],
+        help='Build only the specific compose service'
+    )
     compose.set_defaults(func=build_compose)
 
     # Push docker images produced in other tasks

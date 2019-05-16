@@ -99,6 +99,11 @@ def build_compose(target, args):
             logger.info('Skipping service {}, no build declaration'.format(name))
             continue
 
+        if args.service and name not in args.service:
+            msg = 'Skipping service {}, building only {}'.format(name, args.service)
+            logger.info(msg)
+            continue
+
         # Build the image
         logger.info('Building image for service {}'.format(name))
         context = os.path.realpath(os.path.join(root, build.get('context', '.')))
