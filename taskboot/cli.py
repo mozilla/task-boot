@@ -1,6 +1,6 @@
 import argparse
 from taskboot.build import build_image, build_compose, build_hook
-from taskboot.push import push_artifacts
+from taskboot.push import push_artifacts, heroku_release
 from taskboot.target import Target
 import logging
 import os
@@ -134,6 +134,37 @@ def main():
         help="Hook ID",
     )
     hooks.set_defaults(func=build_hook)
+
+    # Push and trigger a Heroku release
+    deploy_heroku = commands.add_parser('deploy-heroku', help='Push and trigger a Heroku release')
+    deploy_heroku.add_argument(
+        '--task-id',
+        type=str,
+        default=os.environ.get('TASK_ID'),
+        help='Taskcluster task group to analyse',
+    )
+    deploy_heroku.add_argument(
+        '--artifact-filter',
+        type=str,
+        help='Filter applied to artifacts paths, supports fnmatch syntax.',
+        required=True,
+    )
+    deploy_heroku.add_argument(
+        '--exclude-filter',
+        type=str,
+        help='If an artifact match the exclude filter it won\'t be uploaded, supports fnmatch syntax.',
+    )
+    deploy_heroku.add_argument(
+        '--heroku-app',
+        type=str,
+        required=True,
+    )
+    deploy_heroku.add_argument(
+        '--heroku-dyno-type',
+        type=str,
+        default='web',
+    )
+    deploy_heroku.set_defaults(func=heroku_release)
 
     # Always load the target
     args = parser.parse_args()
