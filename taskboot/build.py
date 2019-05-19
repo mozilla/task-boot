@@ -114,10 +114,19 @@ def build_compose(target, args):
         patch_dockerfile(dockerfile, docker.list_images())
 
         tag = service.get('image', name)
+
+        additional_tags = []
+
+        if args.additional_tag:
+            # Remove any existing tag
+            tagless_image = tag.rsplit(":", 1)
+            new_image = f"{tagless_image[0]}:{args.additional_tag}"
+            additional_tags.append(new_image)
+
         if args.registry:
             tag = '{}/{}'.format(args.registry, tag)
         retry(
-            lambda: docker.build(context, dockerfile, tag, args.build_arg),
+            lambda: docker.build(context, dockerfile, tag, additional_tags, args.build_arg),
             wait_between_retries=1,
             retries=args.build_retries,
         )

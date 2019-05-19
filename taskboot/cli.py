@@ -101,6 +101,11 @@ def main():
         default=[],
         help='Build only the specific compose service'
     )
+    compose.add_argument(
+        '--additional-tag',
+        type=str,
+        help='An additional tag to use, images will be tagged with it and pushed',
+    )
     compose.set_defaults(func=build_compose)
 
     # Push docker images produced in other tasks
