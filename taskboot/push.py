@@ -6,7 +6,7 @@ from fnmatch import fnmatch
 import requests
 
 from taskboot.config import Configuration
-from taskboot.docker import Skopeo
+from taskboot.docker import Skopeo, docker_id_archive
 from taskboot.utils import download_progress, retry
 
 logger = logging.getLogger(__name__)
@@ -124,7 +124,7 @@ def heroku_release(target, args):
         skopeo.push_archive(artifact_path, custom_tag_name)
 
     # Get the Docker image id
-    image_id = skopeo.docker_id_archive(artifact_path)
+    image_id = docker_id_archive(artifact_path)
 
     # Trigger a release on Heroku
     update = dict(
