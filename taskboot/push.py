@@ -106,9 +106,6 @@ def heroku_release(target, args):
     # Get the list of matching artifacts as we should get only one
     matching_artifacts = load_artifacts(task, queue, args.artifact_filter, args.exclude_filter)
 
-    heroku_app = args.heroku_app
-    heroku_dyno_type = args.heroku_dyno_type
-
     # Push the Docker image
     if len(matching_artifacts) == 0:
         raise ValueError(f"No artifact found for {args.artifact_filter}")
@@ -117,7 +114,7 @@ def heroku_release(target, args):
     else:
         task_id, artifact_name = matching_artifacts[0]
 
-        custom_tag_name = f"{HEROKU_REGISTRY}/{heroku_app}/{heroku_dyno_type}"
+        custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{args.heroku_dyno_type}"
 
         artifact_path = download_artifact(queue, task_id, artifact_name)
 
@@ -128,11 +125,11 @@ def heroku_release(target, args):
 
     # Trigger a release on Heroku
     update = dict(
-        type=heroku_dyno_type,
+        type=args.heroku_dyno_type,
         docker_image=image_id,
     )
     r = requests.patch(
-            f'https://api.heroku.com/apps/{heroku_app}/formation',
+            f'https://api.heroku.com/apps/{args.heroku_app}/formation',
             json=dict(updates=[update]),
             headers={
                 'Accept': 'application/vnd.heroku+json; version=3.docker-releases',
@@ -141,7 +138,7 @@ def heroku_release(target, args):
     )
     r.raise_for_status()
 
-    logger.info(f'The {heroku_app}/{heroku_dyno_type} has been updated')
+    logger.info(f'The {args.heroku_app}/{args.heroku_dyno_type} application has been updated')
 
 
 def load_artifacts(task, queue, artifact_filter, exclude_filter=None):
