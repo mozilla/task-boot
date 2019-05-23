@@ -178,17 +178,18 @@ class Skopeo(Tool):
             self.run(cmd)
             logger.info('Push successfull')
 
-    def docker_id_archive(self, path):
-        '''Get docker image ID
 
-        Docker image ID corresponds to the sha256 hash of the config file
-        '''
-        # Imported from https://github.com/mozilla/release-services/blob/master/lib/please_cli/please_cli/utils.py#L186
-        tar = tarfile.open(path)
-        manifest = json.load(tar.extractfile('manifest.json'))
-        config = tar.extractfile(manifest[0]['Config'])
-        image_sha256 = hashlib.sha256(config.read()).hexdigest()
-        return f'sha256:{image_sha256}'
+def docker_id_archive(path):
+    '''Get docker image ID
+
+    Docker image ID corresponds to the sha256 hash of the config file.
+    Imported from release-services
+    '''
+    tar = tarfile.open(path)
+    manifest = json.load(tar.extractfile('manifest.json'))
+    config = tar.extractfile(manifest[0]['Config'])
+    image_sha256 = hashlib.sha256(config.read()).hexdigest()
+    return f'sha256:{image_sha256}'
 
 
 def parse_image_name(image_name):
