@@ -11,6 +11,27 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def gen_docker_images(docker_image_name, tags=None, registry=None):
+    if not tags:
+        tags = ["latest"]
+
+    # Remove any potential existing tag
+    tagless_image = docker_image_name.rsplit(":", 1)[0]
+
+    result = []
+
+    for tag in tags:
+        if registry and not tagless_image.startswith(registry):
+            full_tag = "{}/{}:{}".format(registry, tagless_image, tag)
+        else:
+            full_tag = "{}:{}".format(tagless_image, tag)
+
+        logger.info('Will produce image {}'.format(full_tag))
+        result.append(full_tag)
+
+    return result
+
+
 def build_image(target, args):
     '''
     Build a docker image and allow save/push
@@ -31,29 +52,12 @@ def build_image(target, args):
         assert os.access(os.path.dirname(output), os.W_OK | os.W_OK), \
             'Destination is not writable'
 
-    # Build the tag
-    full_docker_images_names = []
-
+    # Build the tags
     base_image = args.image or 'taskboot-{}'.format(uuid.uuid4())
-    tags = args.tag or ["latest"]
-    for tag in tags:
-        # TODO: Should we check if args.image contains a tag?
-        full_tag = '{}:{}'.format(base_image, tag)
-        full_docker_images_names.append(full_tag)
-        logger.info('Will produce image {}'.format(full_tag))
 
     if args.push:
         assert config.has_docker_auth(), 'Missing Docker authentication'
         registry = config.docker['registry']
-
-        # Update tags to include the registry
-        new_tags = []
-
-        for tag in full_docker_images_names:
-            if not tag.startswith(registry):
-                new_tags.append('{}/{}'.format(registry, tag))
-
-        full_docker_images_names = new_tags
 
         # Login on docker
         docker.login(
@@ -62,16 +66,22 @@ def build_image(target, args):
             config.docker['password'],
         )
 
+        tags = gen_docker_images(base_image, args.tag, registry)
+    else:
+        tags = gen_docker_images(base_image, args.tag)
+
     # Build the image
-    docker.build(target.dir, dockerfile, full_docker_images_names, args.build_arg)
+    docker.build(target.dir, dockerfile, tags, args.build_arg)
 
     # Write the produced image
     if output:
-        docker.save(tag, output)
+        for tag in tags:
+            docker.save(tag, output)
 
     # Push the produced image
     if args.push:
-        docker.push(tag)
+        for tag in tags:
+            docker.push(tag)
 
 
 def build_compose(target, args):
@@ -125,17 +135,9 @@ def build_compose(target, args):
         # to avoid using the remote repository first
         patch_dockerfile(dockerfile, docker.list_images())
 
-        tags = []
         docker_image = service.get('image', name)
-        # Remove any existing tag
-        tagless_image = docker_image.rsplit(":", 1)[0]
+        tags = gen_docker_images(docker_image, args.tag, args.registry)
 
-        for tag in (args.tag or ['latest']):
-            new_image = f"{tagless_image}:{tag}"
-            tags.append(new_image)
-
-        if args.registry:
-            tag = '{}/{}'.format(args.registry, tag)
         retry(
             lambda: docker.build(context, dockerfile, tags, args.build_arg),
             wait_between_retries=1,
@@ -144,7 +146,8 @@ def build_compose(target, args):
 
         # Write the produced image
         if output:
-            docker.save(tag, os.path.join(output, '{}.tar'.format(name)))
+            for tag in tags:
+                docker.save(tag, os.path.join(output, '{}.tar'.format(name)))
 
     logger.info('Compose file fully processed.')
 
