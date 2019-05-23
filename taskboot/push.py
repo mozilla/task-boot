@@ -41,20 +41,10 @@ def push_artifacts(target, args):
     assert nb_deps > 0, 'No task dependencies'
 
     # Load dependencies artifacts
-    for i, task_id in enumerate(task['dependencies']):
-        logger.info('Loading task dependencies {}/{} {}'.format(i+1, nb_deps, task_id))
-        task_artifacts = queue.listLatestArtifacts(task_id)
+    artifacts = load_artifacts(task, queue, args.artifact_filter, args.exclude_filter)
 
-        # Only process the filtered artifacts
-        for artifact in task_artifacts['artifacts']:
-            artifact_name = artifact['name']
-            if fnmatch(artifact_name, args.artifact_filter):
-
-                if args.exclude_filter and fnmatch(artifact_name, args.exclude_filter):
-                    logger.info('Excluding artifact %s because of exclude filter', artifact_name)
-                    continue
-
-                push_artifact(queue, skopeo, task_id, artifact_name)
+    for task_id, artifact_name in artifacts:
+        push_artifact(queue, skopeo, task_id, artifact_name)
 
     logger.info('All found artifacts were pushed.')
 
@@ -114,23 +104,7 @@ def heroku_release(target, args):
     assert nb_deps > 0, 'No task dependencies'
 
     # Get the list of matching artifacts as we should get only one
-    matching_artifacts = []
-
-    # Load dependencies artifacts
-    for i, task_id in enumerate(task['dependencies']):
-        logger.info('Loading task dependencies {}/{} {}'.format(i+1, nb_deps, task_id))
-        task_artifacts = queue.listLatestArtifacts(task_id)
-
-        # Only process the filtered artifacts
-        for artifact in task_artifacts['artifacts']:
-            artifact_name = artifact['name']
-            if fnmatch(artifact_name, args.artifact_filter):
-
-                if args.exclude_filter and fnmatch(artifact_name, args.exclude_filter):
-                    logger.info('Excluding artifact %s because of exclude filter', artifact_name)
-                    continue
-
-                matching_artifacts.append((task_id, artifact_name))
+    matching_artifacts = load_artifacts(task, queue, args.artifact_filter, args.exclude_filter)
 
     heroku_app = args.heroku_app
     heroku_dyno_type = args.heroku_dyno_type
@@ -168,3 +142,26 @@ def heroku_release(target, args):
     r.raise_for_status()
 
     logger.info(f'The {heroku_app}/{heroku_dyno_type} has been updated')
+
+
+def load_artifacts(task, queue, artifact_filter, exclude_filter=None):
+    # Get the list of matching artifacts as we should get only one
+    matching_artifacts = []
+
+    # Load dependencies artifacts
+    for i, task_id in enumerate(task['dependencies']):
+        logger.info('Loading task dependencies {}/{} {}'.format(i+1, len(task['dependencies']), task_id))
+        task_artifacts = queue.listLatestArtifacts(task_id)
+
+        # Only process the filtered artifacts
+        for artifact in task_artifacts['artifacts']:
+            artifact_name = artifact['name']
+            if fnmatch(artifact_name, artifact_filter):
+
+                if exclude_filter and fnmatch(artifact_name, exclude_filter):
+                    logger.info('Excluding artifact %s because of exclude filter', artifact_name)
+                    continue
+
+                matching_artifacts.append((task_id, artifact_name))
+
+    return matching_artifacts
