@@ -124,6 +124,7 @@ def heroku_release(target, args):
     image_id = docker_id_archive(artifact_path)
 
     # Trigger a release on Heroku
+    logger.info(f"Deploying image id {image_id!r} to Heroku app {args.heroku_app!r} dyno {args.heroku_dyno_type!r}")
     update = dict(
         type=args.heroku_dyno_type,
         docker_image=image_id,
