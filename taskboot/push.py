@@ -85,7 +85,7 @@ def heroku_release(target, args):
     # Load config from file/secret
     config = Configuration(args)
 
-    assert 'username' in config.heroku and 'password' in config.heroku, 'Missing Docker authentication'
+    assert 'username' in config.heroku and 'password' in config.heroku, 'Missing Heroku authentication'
 
     # Setup skopeo
     skopeo = Skopeo(
