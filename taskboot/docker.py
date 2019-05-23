@@ -8,6 +8,7 @@ import base64
 import tarfile
 import re
 import json
+import hashlib
 
 
 logger = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ class Skopeo(Tool):
         with open(self.auth_file, 'w') as f:
             json.dump(auth, f)
 
-    def push_archive(self, path):
+    def push_archive(self, path, custom_tag=None):
         '''
         Push a local tar OCI archive on the remote repo from config
         The tags used on the image are all used to push
@@ -152,12 +153,15 @@ class Skopeo(Tool):
         assert os.path.exists(path), 'Missing archive {}'.format(path)
         assert tarfile.is_tarfile(path), 'Not a TAR archive {}'.format(path)
 
-        # Open the manifest from downloaded archive
-        tar = tarfile.open(path)
-        manifest_raw = tar.extractfile('manifest.json')
-        manifest = json.loads(manifest_raw.read().decode('utf-8'))
-        tags = manifest[0]['RepoTags']
-        assert len(tags) > 0, 'No tags found'
+        if not custom_tag:
+            # Open the manifest from downloaded archive to read tags
+            tar = tarfile.open(path)
+            manifest_raw = tar.extractfile('manifest.json')
+            manifest = json.loads(manifest_raw.read().decode('utf-8'))
+            tags = manifest[0]['RepoTags']
+            assert len(tags) > 0, 'No tags found'
+        else:
+            tags = [custom_tag]
 
         for tag in tags:
             # Check the registry is in the tag
@@ -173,6 +177,19 @@ class Skopeo(Tool):
             ]
             self.run(cmd)
             logger.info('Push successfull')
+
+
+def docker_id_archive(path):
+    '''Get docker image ID
+
+    Docker image ID corresponds to the sha256 hash of the config file.
+    Imported from release-services
+    '''
+    tar = tarfile.open(path)
+    manifest = json.load(tar.extractfile('manifest.json'))
+    config = tar.extractfile(manifest[0]['Config'])
+    image_sha256 = hashlib.sha256(config.read()).hexdigest()
+    return f'sha256:{image_sha256}'
 
 
 def parse_image_name(image_name):
