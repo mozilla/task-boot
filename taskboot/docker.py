@@ -106,7 +106,7 @@ class Docker(Tool):
         logger.info('Running img command: {}'.format(command))
 
         self.run(command)
-        logger.info('Built image {}'.format(tag))
+        logger.info('Built image {}'.format(", ".join(tags)))
 
     def save(self, tag, path):
         logger.info('Saving image {} to {}'.format(tag, path))
