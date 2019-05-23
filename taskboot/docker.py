@@ -84,18 +84,17 @@ class Docker(Tool):
                 logger.warn('Did not parse this image: {}'.format(line))
         return out
 
-    def build(self, context_dir, dockerfile, tag, additional_tags=[], build_args=[]):
+    def build(self, context_dir, dockerfile, tags, build_args=[]):
         logger.info('Building docker image {}'.format(dockerfile))
 
         command = [
             'build',
             '--state', self.state,
             '--no-console',
-            '--tag', tag,
             '--file', dockerfile,
         ]
 
-        for add_tag in additional_tags:
+        for add_tag in tags:
             command += ["--tag", add_tag]
 
         # We need to "de-parse" the build args
@@ -103,6 +102,8 @@ class Docker(Tool):
             command += ['--build-arg', single_build_arg]
 
         command.append(context_dir)
+
+        logger.info('Running img command: {}'.format(command))
 
         self.run(command)
         logger.info('Built image {}'.format(tag))

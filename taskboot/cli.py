@@ -60,7 +60,14 @@ def main():
         default=False,
         help='Push after building on configured repository',
     )
-    build.add_argument('--tag', type=str, help='Use a specific tag on this image')
+    build.add_argument('--image', type=str, help='The docker image without tag, default to a random one')
+    build.add_argument(
+        '--tag',
+        type=str,
+        action='append',
+        default=[],
+        help='Use a specific tag on this image, default to latest tag'
+    )
     build.add_argument(
         '--build-arg',
         type=str,
@@ -102,9 +109,11 @@ def main():
         help='Build only the specific compose service'
     )
     compose.add_argument(
-        '--additional-tag',
+        '--tag',
         type=str,
-        help='An additional tag to use, images will be tagged with it and pushed',
+        action='append',
+        default=[],
+        help='Use a specific tag on this image, default to latest tag'
     )
     compose.set_defaults(func=build_compose)
 

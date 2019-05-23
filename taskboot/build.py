@@ -32,14 +32,28 @@ def build_image(target, args):
             'Destination is not writable'
 
     # Build the tag
-    tag = args.tag or 'taskboot-{}'.format(uuid.uuid4())
-    # TODO: check tag is valid
+    full_docker_images_names = []
+
+    base_image = args.image or 'taskboot-{}'.format(uuid.uuid4())
+    tags = args.tag or ["latest"]
+    for tag in tags:
+        # TODO: Should we check if args.image contains a tag?
+        full_tag = '{}:{}'.format(base_image, tag)
+        full_docker_images_names.append(full_tag)
+        logger.info('Will produce image {}'.format(full_tag))
 
     if args.push:
         assert config.has_docker_auth(), 'Missing Docker authentication'
         registry = config.docker['registry']
-        if not tag.startswith(registry):
-            tag = '{}/{}'.format(registry, tag)
+
+        # Update tags to include the registry
+        new_tags = []
+
+        for tag in full_docker_images_names:
+            if not tag.startswith(registry):
+                new_tags.append('{}/{}'.format(registry, tag))
+
+        full_docker_images_names = new_tags
 
         # Login on docker
         docker.login(
@@ -48,10 +62,8 @@ def build_image(target, args):
             config.docker['password'],
         )
 
-    logger.info('Will produce image {}'.format(tag))
-
     # Build the image
-    docker.build(target.dir, dockerfile, tag, args.build_arg)
+    docker.build(target.dir, dockerfile, full_docker_images_names, args.build_arg)
 
     # Write the produced image
     if output:
@@ -113,20 +125,19 @@ def build_compose(target, args):
         # to avoid using the remote repository first
         patch_dockerfile(dockerfile, docker.list_images())
 
-        tag = service.get('image', name)
+        tags = []
+        docker_image = service.get('image', name)
+        # Remove any existing tag
+        tagless_image = docker_image.rsplit(":", 1)[0]
 
-        additional_tags = []
-
-        if args.additional_tag:
-            # Remove any existing tag
-            tagless_image = tag.rsplit(":", 1)
-            new_image = f"{tagless_image[0]}:{args.additional_tag}"
-            additional_tags.append(new_image)
+        for tag in (args.tag or ['latest']):
+            new_image = f"{tagless_image}:{tag}"
+            tags.append(new_image)
 
         if args.registry:
             tag = '{}/{}'.format(args.registry, tag)
         retry(
-            lambda: docker.build(context, dockerfile, tag, additional_tags, args.build_arg),
+            lambda: docker.build(context, dockerfile, tags, args.build_arg),
             wait_between_retries=1,
             retries=args.build_retries,
         )
