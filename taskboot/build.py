@@ -68,7 +68,7 @@ def build_image(target, args):
 
         tags = gen_docker_images(base_image, args.tag, registry)
     else:
-        tags = gen_docker_images(base_image, args.tag)
+        tags = gen_docker_images(base_image, args.tag, args.registry)
 
     # Build the image
     docker.build(target.dir, dockerfile, tags, args.build_arg)

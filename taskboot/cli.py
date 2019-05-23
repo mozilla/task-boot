@@ -61,6 +61,7 @@ def main():
         help='Push after building on configured repository',
     )
     build.add_argument('--image', type=str, help='The docker image without tag, default to a random one')
+    build.add_argument('--registry', type=str, help='Docker registry to use in images tags')
     build.add_argument(
         '--tag',
         type=str,
