@@ -54,10 +54,15 @@ def build_image(target, args):
 
     # Build the tags
     base_image = args.image or 'taskboot-{}'.format(uuid.uuid4())
+    tags = gen_docker_images(base_image, args.tag, args.registry)
 
     if args.push:
         assert config.has_docker_auth(), 'Missing Docker authentication'
         registry = config.docker['registry']
+
+        if registry != args.registry:
+            msg = "The credentials are the ones for %r not %r"
+            logger.warning(msg, registry, args.registry)
 
         # Login on docker
         docker.login(
@@ -65,10 +70,6 @@ def build_image(target, args):
             config.docker['username'],
             config.docker['password'],
         )
-
-        tags = gen_docker_images(base_image, args.tag, registry)
-    else:
-        tags = gen_docker_images(base_image, args.tag, args.registry)
 
     # Build the image
     docker.build(target.dir, dockerfile, tags, args.build_arg)

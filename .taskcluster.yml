@@ -87,7 +87,7 @@ tasks:
           - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --quiet . &&
-            taskboot --target=/src build --image=$IMAGE --registry=$REGISTRY --tag=$VERSION --write /image.tar Dockerfile"
+            taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
