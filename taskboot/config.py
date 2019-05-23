@@ -58,6 +58,6 @@ class Configuration(object):
         docker = self.config.get('docker')
         if docker is None:
             return False
-        return 'repository' in docker \
+        return 'registry' in docker \
                and 'username' in docker \
                and 'password' in docker
