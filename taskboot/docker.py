@@ -20,6 +20,26 @@ IMG_LS_REGEX = re.compile(r'([\w\.]+)/(([\w\-_\.]+)/([\w\-_\.]+)):([\w\-_\.]+)\t
 IMG_NAME_REGEX = re.compile(r'(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)')
 
 
+def read_archive_tags(path):
+    tar = tarfile.open(path)
+    tags = []
+    try:
+        manifest_raw = tar.extractfile('manifest.json')
+        manifest = json.loads(manifest_raw.read().decode('utf-8'))
+        tags = manifest[0]['RepoTags']
+    except KeyError:
+        # Use older image format:
+        # {"registry.hub.docker.com/xyz/":{"master":"02d3443146cc39d41207919f156869d60942cd3eafeec793a4ac39f905f6f7c6"}}
+        repositories_raw = tar.extractfile('repositories')
+        repositories = json.loads(repositories_raw.read().decode('utf-8'))
+        for repo, tag_and_sha in repositories.items():
+            for tag, sha in tag_and_sha.items():
+                tags.append('{}:{}'.format(repo, tag))
+
+    assert len(tags) > 0, 'No tags found'
+    return tags
+
+
 class Tool(object):
     '''
     Common interface for tools available in shell
@@ -35,6 +55,132 @@ class Tool(object):
 
 
 class Docker(Tool):
+    '''
+    Interface to docker
+    '''
+    def __init__(self):
+        super().__init__('docker')
+
+    def login(self, registry, username, password):
+        '''
+        Login on remote registry
+        '''
+        self.registry = registry
+        cmd = [
+            'login',
+            '--password-stdin',
+            '-u', username,
+            registry,
+        ]
+        self.run(cmd, input=password.encode('utf-8'))
+        logger.info('Authenticated on {} as {}'.format(registry, username))
+
+    def list_images(self):
+        '''
+        List images stored in current state
+        Parses the text output into usable dicts
+        '''
+        # list images, skipping the ones without tags (dangling)
+        ls = self.run(
+            ['images', '--no-trunc', '--filter', 'dangling=false',
+             '--format', '{{ .Repository }} {{ .Tag }} {{ .Digest }}'],
+            stdout=subprocess.PIPE)
+        images = []
+        for line in ls.stdout.splitlines():
+            try:
+                repository, tag, digest = line.decode('utf-8').split()
+                if digest == "<none>":
+                    logger.warn('Skipping image without digest: {}'.format(line))
+                    continue
+                repository_parts = repository.split("/")
+                if len(repository_parts) < 3:
+                    registry = None
+                else:
+                    registry = repository_parts[0]
+                    repository = "/".join(repository_parts[1:])
+                images.append({
+                    'registry': registry,
+                    'repository': repository,
+                    'tag': tag,
+                    'digest': digest,
+                })
+            except ValueError:
+                logger.warn('Did not parse this image: {}'.format(line))
+        return images
+
+    def build(self, context_dir, dockerfile, tags, build_args=[]):
+        logger.info('Building docker image {}'.format(dockerfile))
+
+        command = [
+            'build',
+            '--file', dockerfile,
+        ]
+
+        for add_tag in tags:
+            command += ["--tag", add_tag]
+
+        for single_build_arg in build_args:
+            command += ['--build-arg', single_build_arg]
+
+        command.append(context_dir)
+
+        logger.info('Running docker command: {}'.format(command))
+
+        self.run(command)
+        logger.info('Built image {}'.format(", ".join(tags)))
+
+    def save(self, tag, path):
+        logger.info('Saving image {} to {}'.format(tag, path))
+        self.run([
+            'save',
+            '--output', path,
+            tag,
+        ])
+
+    def load(self, path):
+        logger.info('Loading image from {}'.format(path))
+        self.run([
+            'load',
+            '--input', path,
+        ])
+
+    def push(self, tag):
+        logger.info('Pushing image {}'.format(tag))
+        self.run([
+            'push',
+            tag,
+        ])
+
+    def tag(self, source, target):
+        logger.info('Tagging {} with {}'.format(source, target))
+        self.run(['tag', source, target])
+
+    def push_archive(self, path, custom_tag=None):
+        '''
+        Push a local tar archive on the remote repo from config
+        The tags used on the image are all used to push
+        '''
+        assert os.path.exists(path), 'Missing archive {}'.format(path)
+        assert tarfile.is_tarfile(path), 'Not a TAR archive {}'.format(path)
+
+        tags = read_archive_tags(path)
+        self.load(path)
+
+        if custom_tag:
+            self.tag(tags[0], custom_tag)
+            tags = [custom_tag]
+
+        for tag in tags:
+            # Check the registry is in the tag
+            assert tag.startswith(self.registry), \
+                'Invalid tag {} : must use registry {}'.format(tag, self.registry)
+
+            logger.info('Pushing image as {}'.format(tag))
+            self.push(tag)
+            logger.info('Push successfull')
+
+
+class Img(Tool):
     '''
     Interface to the img tool, replacing docker daemon
     '''
@@ -171,10 +317,7 @@ class Skopeo(Tool):
         assert tarfile.is_tarfile(path), 'Not a TAR archive {}'.format(path)
 
         if not custom_tag:
-            # Open the manifest from downloaded archive to read tags
-            manifest = read_manifest(path)
-            tags = manifest[0]['RepoTags']
-            assert len(tags) > 0, 'No tags found'
+            tags = read_archive_tags(path)
         else:
             tags = [custom_tag]
 
@@ -241,7 +384,10 @@ def patch_dockerfile(dockerfile, images):
         repo, tag = parse_image_name(original)
         for image in images:
             if image['repository'] == repo and image['tag'] == tag:
-                local = '{}/{}@sha256:{}'.format(image['registry'], image['repository'], image['digest'])
+                if image['registry']:
+                    local = '{}/{}@sha256:{}'.format(image['registry'], image['repository'], image['digest'])
+                else:
+                    local = '{}@sha256:{}'.format(image['repository'], image['digest'])
                 logger.info('Replacing image {} by {}'.format(original, local))
                 return local
 

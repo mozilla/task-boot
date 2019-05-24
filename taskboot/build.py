@@ -4,7 +4,7 @@ import yaml
 import json
 import taskcluster
 from taskboot.config import Configuration, TASKCLUSTER_DASHBOARD_URL
-from taskboot.docker import Docker, patch_dockerfile
+from taskboot.docker import Docker, Img, patch_dockerfile
 from taskboot.utils import retry
 import logging
 
@@ -36,7 +36,12 @@ def build_image(target, args):
     '''
     Build a docker image and allow save/push
     '''
-    docker = Docker(cache=args.cache)
+    if args.build_tool == "img":
+        build_tool = Img(cache=args.cache)
+    elif args.build_tool == "docker":
+        build_tool = Docker()
+    else:
+        raise ValueError("Unsupported build tool: {}".format(args.build_tool))
 
     # Load config from file/secret
     config = Configuration(args)
@@ -65,23 +70,23 @@ def build_image(target, args):
             logger.warning(msg, registry, args.registry)
 
         # Login on docker
-        docker.login(
+        build_tool.login(
             registry,
             config.docker['username'],
             config.docker['password'],
         )
 
     # Build the image
-    docker.build(target.dir, dockerfile, tags, args.build_arg)
+    build_tool.build(target.dir, dockerfile, tags, args.build_arg)
 
     # Write the produced image
     if output:
-        docker.save(tags, output)
+        build_tool.save(tags, output)
 
     # Push the produced image
     if args.push:
         for tag in tags:
-            docker.push(tag)
+            build_tool.push(tag)
 
 
 def build_compose(target, args):
@@ -89,7 +94,7 @@ def build_compose(target, args):
     Read a compose file and build each image described as buildable
     '''
     assert args.build_retries > 0, 'Build retries must be a positive integer'
-    docker = Docker(cache=args.cache)
+    build_tool = Img(cache=args.cache)
 
     # Check the dockerfile is available in target
     composefile = target.check_path(args.composefile)
@@ -133,20 +138,20 @@ def build_compose(target, args):
 
         # We need to replace the FROM statements by their local versions
         # to avoid using the remote repository first
-        patch_dockerfile(dockerfile, docker.list_images())
+        patch_dockerfile(dockerfile, build_tool.list_images())
 
         docker_image = service.get('image', name)
         tags = gen_docker_images(docker_image, args.tag, args.registry)
 
         retry(
-            lambda: docker.build(context, dockerfile, tags, args.build_arg),
+            lambda: build_tool.build(context, dockerfile, tags, args.build_arg),
             wait_between_retries=1,
             retries=args.build_retries,
         )
 
         # Write the produced image
         if output:
-            docker.save(tags, os.path.join(output, '{}.tar'.format(name)))
+            build_tool.save(tags, os.path.join(output, '{}.tar'.format(name)))
 
     logger.info('Compose file fully processed.')
 

@@ -4,7 +4,7 @@ FROM python:3-alpine
 ARG BUILD_DIR=/build
 
 # Add img
-RUN apk add img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
+RUN apk add img docker --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Setup other deps
 RUN apk add git skopeo
