@@ -1,4 +1,5 @@
 import uuid
+import os
 import os.path
 import yaml
 import json
@@ -164,6 +165,19 @@ def build_hook(target, args):
 
     with open(hook_file_path) as hook_file:
         payload = json.load(hook_file)
+
+    # Inject environment variables if asked
+    payload_env = payload["task"]["payload"]["env"]
+    for env_variable in args.forward_env:
+        env_value = os.getenv(env_variable, default=None)
+
+        if env_value:
+            # TODO: Should we check if there is already an env variable with
+            # the same name defined?
+            payload_env[env_variable] = env_value
+        else:
+            msg = "Not forwarding environment variable %s, it's either not present or has an empty value"
+            logger.warning(msg, env_variable)
 
     # Load config from file/secret
     config = Configuration(args)

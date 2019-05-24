@@ -161,6 +161,13 @@ def main():
         type=str,
         help="Hook ID",
     )
+    hooks.add_argument(
+        "--forward-env",
+        type=str,
+        action='append',
+        default=[],
+        help="Put the given environment variable in the env of the hook task",
+    )
     hooks.set_defaults(func=build_hook)
 
     # Push and trigger a Heroku release
