@@ -61,3 +61,9 @@ class Configuration(object):
         return 'registry' in docker \
                and 'username' in docker \
                and 'password' in docker
+
+    def has_aws_auth(self):
+        aws = self.config.get('aws')
+        if aws is None:
+            return False
+        return 'access_key_id' in aws and 'secret_access_key' in aws
