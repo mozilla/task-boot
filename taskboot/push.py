@@ -1,13 +1,11 @@
 import logging
 import taskcluster
-import tempfile
-from fnmatch import fnmatch
 
 import requests
 
 from taskboot.config import Configuration
 from taskboot.docker import Skopeo, docker_id_archive
-from taskboot.utils import download_progress, retry
+from taskboot.utils import load_artifacts, download_artifact
 
 logger = logging.getLogger(__name__)
 
@@ -34,35 +32,13 @@ def push_artifacts(target, args):
     # Load queue service
     queue = taskcluster.Queue(config.get_taskcluster_options())
 
-    # Load current task description to list its dependencies
-    logger.info('Loading task status {}'.format(args.task_id))
-    task = queue.task(args.task_id)
-    nb_deps = len(task['dependencies'])
-    assert nb_deps > 0, 'No task dependencies'
-
     # Load dependencies artifacts
-    artifacts = load_artifacts(task, queue, args.artifact_filter, args.exclude_filter)
+    artifacts = load_artifacts(args.task_id, queue, args.artifact_filter, args.exclude_filter)
 
     for task_id, artifact_name in artifacts:
         push_artifact(queue, skopeo, task_id, artifact_name)
 
     logger.info('All found artifacts were pushed.')
-
-
-def download_artifact(queue, task_id, artifact_name):
-    logger.info('Download {} from {}'.format(artifact_name, task_id))
-
-    # Build artifact url
-    try:
-        url = queue.buildSignedUrl('getLatestArtifact', task_id, artifact_name)
-    except taskcluster.exceptions.TaskclusterAuthFailure:
-        url = queue.buildUrl('getLatestArtifact', task_id, artifact_name)
-
-    # Download the artifact in a temporary file
-    _, path = tempfile.mkstemp(suffix='-taskboot.tar')
-    retry(lambda: download_progress(url, path))
-
-    return path
 
 
 def push_artifact(queue, skopeo, task_id, artifact_name, custom_tag=None):
@@ -97,14 +73,8 @@ def heroku_release(target, args):
     # Load queue service
     queue = taskcluster.Queue(config.get_taskcluster_options())
 
-    # Load current task description to list its dependencies
-    logger.info('Loading task status {}'.format(args.task_id))
-    task = queue.task(args.task_id)
-    nb_deps = len(task['dependencies'])
-    assert nb_deps > 0, 'No task dependencies'
-
     # Get the list of matching artifacts as we should get only one
-    matching_artifacts = load_artifacts(task, queue, args.artifact_filter, args.exclude_filter)
+    matching_artifacts = load_artifacts(args.task_id, queue, args.artifact_filter, args.exclude_filter)
 
     # Push the Docker image
     if len(matching_artifacts) == 0:
@@ -140,26 +110,3 @@ def heroku_release(target, args):
     r.raise_for_status()
 
     logger.info(f'The {args.heroku_app}/{args.heroku_dyno_type} application has been updated')
-
-
-def load_artifacts(task, queue, artifact_filter, exclude_filter=None):
-    # Get the list of matching artifacts as we should get only one
-    matching_artifacts = []
-
-    # Load dependencies artifacts
-    for i, task_id in enumerate(task['dependencies']):
-        logger.info('Loading task dependencies {}/{} {}'.format(i+1, len(task['dependencies']), task_id))
-        task_artifacts = queue.listLatestArtifacts(task_id)
-
-        # Only process the filtered artifacts
-        for artifact in task_artifacts['artifacts']:
-            artifact_name = artifact['name']
-            if fnmatch(artifact_name, artifact_filter):
-
-                if exclude_filter and fnmatch(artifact_name, exclude_filter):
-                    logger.info('Excluding artifact %s because of exclude filter', artifact_name)
-                    continue
-
-                matching_artifacts.append((task_id, artifact_name))
-
-    return matching_artifacts
