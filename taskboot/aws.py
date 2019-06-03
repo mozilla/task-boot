@@ -41,7 +41,7 @@ def push_s3(target, args):
     # Load queue service
     queue = taskcluster.Queue(config.get_taskcluster_options())
 
-    # Download all files from the speficied artifact folder
+    # Download all files from the specified artifact folder
     # These files are then uploaded on the bucket, stripping the artifact folder
     # from their final path
     artifacts = load_artifacts(args.task_id, queue, '{}/*'.format(args.artifact_folder))
