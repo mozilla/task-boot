@@ -1,6 +1,10 @@
 import requests
 import logging
 import time
+import taskcluster
+import os
+import tempfile
+from fnmatch import fnmatch
 
 
 logger = logging.getLogger(__name__)
@@ -51,3 +55,56 @@ def download_progress(url, path):
 
     logger.info('Written {} with {} bytes'.format(path, written))
     return written
+
+
+def load_artifacts(task_id, queue, artifact_filter, exclude_filter=None):
+    '''
+    Load Taskcluster artifacts from all tasks depending on specified one
+    This will filter all the artifacts using inclusion and exclusion glob matches
+    '''
+    # Load current task description to list its dependencies
+    logger.info('Loading task status {}'.format(task_id))
+    task = queue.task(task_id)
+    nb_deps = len(task['dependencies'])
+    assert nb_deps > 0, 'No task dependencies'
+
+    # Get the list of matching artifacts as we should get only one
+    matching_artifacts = []
+
+    # Load dependencies artifacts
+    for i, task_id in enumerate(task['dependencies']):
+        logger.info('Loading task dependencies {}/{} {}'.format(i+1, len(task['dependencies']), task_id))
+        task_artifacts = queue.listLatestArtifacts(task_id)
+
+        # Only process the filtered artifacts
+        for artifact in task_artifacts['artifacts']:
+            artifact_name = artifact['name']
+            if fnmatch(artifact_name, artifact_filter):
+
+                if exclude_filter and fnmatch(artifact_name, exclude_filter):
+                    logger.info('Excluding artifact %s because of exclude filter', artifact_name)
+                    continue
+
+                matching_artifacts.append((task_id, artifact_name))
+
+    return matching_artifacts
+
+
+def download_artifact(queue, task_id, artifact_name):
+    '''
+    Download a Taskcluster artifact into a local tempfile
+    '''
+    logger.info('Download {} from {}'.format(artifact_name, task_id))
+
+    # Build artifact url
+    try:
+        url = queue.buildSignedUrl('getLatestArtifact', task_id, artifact_name)
+    except taskcluster.exceptions.TaskclusterAuthFailure:
+        url = queue.buildUrl('getLatestArtifact', task_id, artifact_name)
+
+    # Download the artifact in a temporary file
+    _, ext = os.path.splitext(artifact_name)
+    _, path = tempfile.mkstemp(suffix='-taskboot{}'.format(ext))
+    retry(lambda: download_progress(url, path))
+
+    return path

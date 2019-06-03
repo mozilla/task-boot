@@ -1,6 +1,7 @@
 import argparse
 from taskboot.build import build_image, build_compose, build_hook
 from taskboot.push import push_artifacts, heroku_release
+from taskboot.aws import push_s3
 from taskboot.target import Target
 import logging
 import os
@@ -193,6 +194,29 @@ def main():
         default='web',
     )
     deploy_heroku.set_defaults(func=heroku_release)
+
+    # Push files on an AWS S3 bucket
+    deploy_s3 = commands.add_parser('deploy-s3', help='Push files on an AWS S3 bucket')
+    deploy_s3.add_argument(
+        '--task-id',
+        type=str,
+        default=os.environ.get('TASK_ID'),
+        help='Taskcluster task group to analyse',
+    )
+    deploy_s3.add_argument(
+        '--artifact-folder',
+        type=str,
+        help='Prefix of the Taskcluster artifact folder to upload on S3.'
+             'All files in that folder will be at the root of the bucket',
+        required=True,
+    )
+    deploy_s3.add_argument(
+        '--bucket',
+        type=str,
+        help='The S3 bucket to use',
+        required=True,
+    )
+    deploy_s3.set_defaults(func=push_s3)
 
     # Always load the target
     args = parser.parse_args()
