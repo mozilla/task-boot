@@ -1,5 +1,6 @@
 import logging
 import taskcluster
+import mimetypes
 
 import boto3
 import botocore.exceptions
@@ -50,11 +51,15 @@ def push_s3(target, args):
         assert artifact_name.startswith(args.artifact_folder)
         local_path = download_artifact(queue, task_id, artifact_name)
 
+        # Detect mime/type to set valid content-type for web requests
+        content_type , _ = mimetypes.guess_type(local_path)
+
         # Push that artifact on the S3 bucket, without the artifact folder
         s3_path = artifact_name[len(args.artifact_folder) + 1:]
         s3.put_object(
             Bucket=args.bucket,
             Key=s3_path,
             Body=open(local_path, 'rb'),
+            ContentType=content_type,
         )
-        logger.info('Uploaded {} on S3'.format(s3_path))
+        logger.info('Uploaded {} as {} on S3'.format(s3_path, content_type))
