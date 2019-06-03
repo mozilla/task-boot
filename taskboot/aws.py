@@ -52,7 +52,7 @@ def push_s3(target, args):
         local_path = download_artifact(queue, task_id, artifact_name)
 
         # Detect mime/type to set valid content-type for web requests
-        content_type , _ = mimetypes.guess_type(local_path)
+        content_type, _ = mimetypes.guess_type(local_path)
 
         # Push that artifact on the S3 bucket, without the artifact folder
         s3_path = artifact_name[len(args.artifact_folder) + 1:]
