@@ -93,7 +93,12 @@ def main():
         help='Path to docker-compose.yml to use',
         default='docker-compose.yml',
     )
-    compose.add_argument('--registry', type=str, help='Docker registry to use in images tags')
+    compose.add_argument(
+        '--registry',
+        type=str,
+        default=os.environ.get('REGISTRY', 'registry.hub.docker.com'),
+        help='Docker registry to use in images tags'
+    )
     compose.add_argument('--write', type=str, help='Directory to write the docker images')
     compose.add_argument(
         '--build-retries', '-r',
