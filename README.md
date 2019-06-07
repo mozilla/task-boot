@@ -23,3 +23,8 @@ Documentation
 -------------
 
 A more detailed documentation is available in this [project's wiki](https://github.com/mozilla/task-boot/wiki).
+
+System requirements
+-------------------
+
+* `img` must be at least in version 0.5.2 to support multiple tags
