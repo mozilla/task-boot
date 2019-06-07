@@ -65,7 +65,7 @@ def main():
     build.add_argument(
         '--registry',
         type=str,
-        default=os.environ.get('REGISTRY'),
+        default=os.environ.get('REGISTRY', 'registry.hub.docker.com'),
         help='Docker registry to use in images tags'
     )
     build.add_argument(
