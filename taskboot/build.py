@@ -148,7 +148,8 @@ def build_compose(target, args):
         # Write the produced image
         if output:
             for tag in tags:
-                docker.save(tag, os.path.join(output, '{}.tar'.format(name)))
+                output_file = '{}.tar'.format(tag.replace(os.sep, "_").replace(":", "_"))
+                docker.save(tag, os.path.join(output, output_file))
 
     logger.info('Compose file fully processed.')
 
