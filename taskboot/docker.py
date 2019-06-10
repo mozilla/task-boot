@@ -293,7 +293,6 @@ class Skopeo(Tool):
     def __init__(self):
         super().__init__('skopeo')
 
-
     def login(self, registry, username, password):
         '''
         Generate auth file
