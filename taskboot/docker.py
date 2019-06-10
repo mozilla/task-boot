@@ -290,9 +290,14 @@ class Skopeo(Tool):
     '''
     Interface to the skopeo tool, used to copy local images to remote repositories
     '''
-    def __init__(self, registry, username, password):
+    def __init__(self):
         super().__init__('skopeo')
 
+
+    def login(self, registry, username, password):
+        '''
+        Generate auth file
+        '''
         # Setup the authentication
         _, self.auth_file = tempfile.mkstemp(suffix='-skopeo.json')
         pair = '{}:{}'.format(username, password).encode('utf-8')

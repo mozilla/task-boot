@@ -23,20 +23,17 @@ def push_artifacts(target, args):
     assert config.has_docker_auth(), 'Missing Docker authentication'
 
     if args.push_tool == "skopeo":
-        push_tool = Skopeo(
-            config.docker['registry'],
-            config.docker['username'],
-            config.docker['password'],
-        )
+        push_tool = Skopeo()
     elif args.push_tool == "docker":
         push_tool = Docker()
-        push_tool.login(
-            config.docker['registry'],
-            config.docker['username'],
-            config.docker['password'],
-        )
     else:
-        ValueError('Not  supported push tool: {}'.format(args.push_tool))
+        raise ValueError('Not  supported push tool: {}'.format(args.push_tool))
+
+    push_tool.login(
+        config.docker['registry'],
+        config.docker['username'],
+        config.docker['password'],
+    )
 
     # Load queue service
     queue = taskcluster.Queue(config.get_taskcluster_options())
@@ -71,7 +68,8 @@ def heroku_release(target, args):
     assert 'username' in config.heroku and 'password' in config.heroku, 'Missing Heroku authentication'
 
     # Setup skopeo
-    skopeo = Skopeo(
+    skopeo = Skopeo()
+    skopeo.login(
         HEROKU_REGISTRY,
         config.heroku['username'],
         config.heroku['password'],
