@@ -1,6 +1,9 @@
 import pytest
 import subprocess
 from taskboot.docker import Docker
+import os
+
+TESTS_DIR = os.path.realpath(os.path.dirname(__file__))
 
 
 @pytest.fixture
@@ -29,3 +32,14 @@ def mock_docker(tmpdir):
                 raise Exception('Unsupported command in mock: {}'.format(' '.join(command)))
 
     return MockDocker()
+
+
+@pytest.fixture
+def hello_archive(tmpdir):
+    '''
+    Get a temporary copy of the helloworld docker archive
+    '''
+    path = os.path.join(TESTS_DIR, 'hello.tar')
+    hello = tmpdir.join('hello.tar')
+    hello.write_binary(open(path, 'rb').read())
+    return hello

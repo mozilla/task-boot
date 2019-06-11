@@ -1,4 +1,4 @@
-from taskboot.docker import parse_image_name, patch_dockerfile
+from taskboot.docker import parse_image_name, patch_dockerfile, read_manifest, write_manifest
 import uuid
 
 DOCKERFILE_SIMPLE = '''
@@ -115,5 +115,42 @@ def test_list_local_images(mock_docker):
             'created': '1 days ago',
             'updated': '1 days ago',
             'digest': '991d19e5156799aa79cf7138b8b843601f180e68f625b892df40a1993b7ac7da',
+        }
+    ]
+
+
+def test_patch_manifest(hello_archive):
+    '''
+    Test low level functions to patch a docker image
+    '''
+
+    # Read original manifest
+    manifest = read_manifest(hello_archive.realpath())
+    assert manifest == [
+        {
+            'Config': 'fce289e99eb9bca977dae136fbe2a82b6b7d4c372474c9235adc1741675f587e.json',
+            'Layers': ['cdccdf50922d90e847e097347de49119be0f17c18b4a2d98da9919fa5884479d/layer.tar'],
+            'RepoTags': ['hello-world:latest']
+        }
+    ]
+
+    # Update it with different tags
+    manifest[0]['RepoTags'] += [
+        'another:tag',
+        'mozilla/taskboot:test',
+    ]
+    write_manifest(hello_archive.realpath(), manifest)
+
+    # Manifest should have changed
+    manifest = read_manifest(hello_archive.realpath())
+    assert manifest == [
+        {
+            'Config': 'fce289e99eb9bca977dae136fbe2a82b6b7d4c372474c9235adc1741675f587e.json',
+            'Layers': ['cdccdf50922d90e847e097347de49119be0f17c18b4a2d98da9919fa5884479d/layer.tar'],
+            'RepoTags': [
+                'hello-world:latest',
+                'another:tag',
+                'mozilla/taskboot:test',
+            ]
         }
     ]
