@@ -129,13 +129,15 @@ class Docker(Tool):
         self.run(command)
         logger.info('Built image {}'.format(", ".join(tags)))
 
-    def save(self, tag, path):
-        logger.info('Saving image {} to {}'.format(tag, path))
-        self.run([
+    def save(self, tags, path):
+        assert isinstance(tags, list)
+        assert len(tags) > 0, 'Missing tags'
+        logger.info('Saving image with tags {} to {}'.format(', '.join(tags), path))
+        command = [
             'save',
             '--output', path,
-            tag,
-        ])
+        ] + tags
+        self.run(command)
 
     def load(self, path):
         logger.info('Loading image from {}'.format(path))
