@@ -2,6 +2,7 @@ from dockerfile_parse import DockerfileParser
 import subprocess
 import shutil
 import tempfile
+import io
 import logging
 import os
 import base64
@@ -109,14 +110,26 @@ class Docker(Tool):
         self.run(command)
         logger.info('Built image {}'.format(", ".join(tags)))
 
-    def save(self, tag, path):
-        logger.info('Saving image {} to {}'.format(tag, path))
+    def save(self, tags, path):
+        assert isinstance(tags, list)
+        assert len(tags) > 0, 'Missing tags to save'
+
+        # First save the image using only one tag
+        # img does not support (yet) writing multiple tags
+        main_tag = tags[0]
+        logger.info('Saving image {} to {}'.format(main_tag, path))
         self.run([
             'save',
             '--state', self.state,
             '--output', path,
-            tag,
+            main_tag
         ])
+
+        # Patch the produced image to add other tags
+        if len(tags) > 1:
+            manifest = read_manifest(path)
+            manifest[0]['RepoTags'] = tags
+            write_manifest(path, manifest)
 
     def push(self, tag):
         logger.info('Pushing image {}'.format(tag))
@@ -159,9 +172,7 @@ class Skopeo(Tool):
 
         if not custom_tag:
             # Open the manifest from downloaded archive to read tags
-            tar = tarfile.open(path)
-            manifest_raw = tar.extractfile('manifest.json')
-            manifest = json.loads(manifest_raw.read().decode('utf-8'))
+            manifest = read_manifest(path)
             tags = manifest[0]['RepoTags']
             assert len(tags) > 0, 'No tags found'
         else:
@@ -245,3 +256,37 @@ def patch_dockerfile(dockerfile, images):
     parser.content = open(dockerfile).read()
     logger.info('Initial parent images: {}'.format(' & '.join(parser.parent_images)))
     parser.parent_images = list(map(_find_replacement, parser.parent_images))
+
+
+def read_manifest(path):
+    '''
+    Read a Docker archive manifest and load it as JSON
+    '''
+    assert os.path.exists(path), 'Missing archive {}'.format(path)
+    assert tarfile.is_tarfile(path), 'Not a TAR archive {}'.format(path)
+
+    tar = tarfile.open(path)
+    manifest_raw = tar.extractfile('manifest.json')
+    return json.loads(manifest_raw.read().decode('utf-8'))
+
+
+def write_manifest(path, manifest):
+    '''
+    Update the manifest of an existing Docker archive image
+    Used to update tags
+    '''
+    assert os.path.exists(path), 'Missing archive {}'.format(path)
+    assert tarfile.is_tarfile(path), 'Not a TAR archive {}'.format(path)
+    assert isinstance(manifest, list)
+
+    # Tar file content must be provided as bytes
+    content = json.dumps(manifest).encode('utf-8')
+
+    # TarInfo is the pointer to the data in the tar archive
+    index = tarfile.TarInfo('manifest.json')
+    index.size = len(content)
+
+    # Open the archive in append mode, and overwrite the existing file
+    tar = tarfile.open(path, 'a')
+    tar.addfile(index, io.BytesIO(content))
+    logger.info('Patched manifest of archive {}'.format(path))
