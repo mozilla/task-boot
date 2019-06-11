@@ -265,9 +265,9 @@ def read_manifest(path):
     assert os.path.exists(path), 'Missing archive {}'.format(path)
     assert tarfile.is_tarfile(path), 'Not a TAR archive {}'.format(path)
 
-    tar = tarfile.open(path)
-    manifest_raw = tar.extractfile('manifest.json')
-    return json.loads(manifest_raw.read().decode('utf-8'))
+    with tarfile.open(path) as tar:
+        manifest_raw = tar.extractfile('manifest.json')
+        return json.load(manifest_raw)
 
 
 def write_manifest(path, manifest):
@@ -287,6 +287,6 @@ def write_manifest(path, manifest):
     index.size = len(content)
 
     # Open the archive in append mode, and overwrite the existing file
-    tar = tarfile.open(path, 'a')
-    tar.addfile(index, io.BytesIO(content))
-    logger.info('Patched manifest of archive {}'.format(path))
+    with tarfile.open(path, 'a') as tar:
+        tar.addfile(index, io.BytesIO(content))
+        logger.info('Patched manifest of archive {}'.format(path))

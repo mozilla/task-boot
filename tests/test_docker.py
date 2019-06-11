@@ -125,7 +125,7 @@ def test_patch_manifest(hello_archive):
     '''
 
     # Read original manifest
-    manifest = read_manifest(hello_archive.realpath())
+    manifest = read_manifest(hello_archive)
     assert manifest == [
         {
             'Config': 'fce289e99eb9bca977dae136fbe2a82b6b7d4c372474c9235adc1741675f587e.json',
@@ -139,10 +139,10 @@ def test_patch_manifest(hello_archive):
         'another:tag',
         'mozilla/taskboot:test',
     ]
-    write_manifest(hello_archive.realpath(), manifest)
+    write_manifest(hello_archive, manifest)
 
     # Manifest should have changed
-    manifest = read_manifest(hello_archive.realpath())
+    manifest = read_manifest(hello_archive)
     assert manifest == [
         {
             'Config': 'fce289e99eb9bca977dae136fbe2a82b6b7d4c372474c9235adc1741675f587e.json',

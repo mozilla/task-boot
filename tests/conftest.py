@@ -35,11 +35,11 @@ def mock_docker(tmpdir):
 
 
 @pytest.fixture
-def hello_archive(tmpdir):
+def hello_archive(tmp_path):
     '''
     Get a temporary copy of the helloworld docker archive
     '''
     path = os.path.join(TESTS_DIR, 'hello.tar')
-    hello = tmpdir.join('hello.tar')
-    hello.write_binary(open(path, 'rb').read())
+    hello = tmp_path / 'hello.tar'
+    hello.write_bytes(open(path, 'rb').read())
     return hello

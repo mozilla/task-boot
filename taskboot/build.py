@@ -146,7 +146,7 @@ def build_compose(target, args):
 
         # Write the produced image
         if output:
-            docker.save(tags, os.path.join(output, '{}.tar'.format(service)))
+            docker.save(tags, os.path.join(output, '{}.tar'.format(name)))
 
     logger.info('Compose file fully processed.')
 
