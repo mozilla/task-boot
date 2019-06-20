@@ -80,9 +80,29 @@ def heroku_release(target, args):
 
     updates_payload = []
 
+    parsed_args = []
+
+    bad_parameter_error_message = f"%r doesn't match format 'dyno-name:/path/to/artifact'"
+
+    # Check format of artifacts params
     for artifact in args.artifacts:
-        heroku_dyno_type, artifact_path = artifact.split(":", 1)
-        logger.info("Searching artifact for dyno type %r with filter %r", heroku_dyno_type, artifact_path)
+        colon_number = artifact.count(":")
+
+        if colon_number != 1:
+            raise Exception(bad_parameter_error_message % artifact)
+
+        heroku_dyno_name, artifact_path = artifact.split(":", 1)
+
+        if not heroku_dyno_name:
+            raise Exception(bad_parameter_error_message % artifact)
+
+        if not artifact_path:
+            raise Exception(bad_parameter_error_message % artifact)
+
+        parsed_args.append((heroku_dyno_name, artifact_path))
+
+    for heroku_dyno_name, artifact_path in parsed_args:
+        logger.info(f"Searching artifact for dyno type {heroku_dyno_name} with filter {artifact_path}")
 
         # Get the list of matching artifacts as we should get only one
         matching_artifacts = load_artifacts(args.task_id, queue, artifact_path)
@@ -96,7 +116,7 @@ def heroku_release(target, args):
         # Push the Docker image
         task_id, artifact_name = matching_artifacts[0]
 
-        custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_type}"
+        custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_name}"
 
         artifact_path = download_artifact(queue, task_id, artifact_name)
 
@@ -105,7 +125,7 @@ def heroku_release(target, args):
         # Get the Docker image id
         image_id = docker_id_archive(artifact_path)
 
-        updates_payload.append({"type": heroku_dyno_type, "docker_image": image_id})
+        updates_payload.append({"type": heroku_dyno_name, "docker_image": image_id})
 
     # Trigger a release on Heroku
     logger.info("Deploying update for dyno types: %r", list(sorted(x["type"] for x in updates_payload)))
@@ -120,4 +140,4 @@ def heroku_release(target, args):
     )
     r.raise_for_status()
 
-    logger.info(f'The {args.heroku_app}/{args.heroku_dyno_type} application has been updated')
+    logger.info(f'The {args.heroku_app}/{args.heroku_dyno_name} application has been updated')
