@@ -1,4 +1,5 @@
 from taskboot.docker import parse_image_name, patch_dockerfile, read_manifest, write_manifest
+from taskboot.build import gen_docker_images
 import uuid
 
 DOCKERFILE_SIMPLE = '''
@@ -153,4 +154,37 @@ def test_patch_manifest(hello_archive):
                 'mozilla/taskboot:test',
             ]
         }
+    ]
+
+
+def test_tags_generation():
+    '''
+    Validate full docker tags generation from image name + versions
+    '''
+    assert gen_docker_images('myimage') == [
+        'myimage:latest',
+    ]
+    assert gen_docker_images('myimage:sometag') == [
+        'myimage:latest',
+    ]
+    assert gen_docker_images('myimage', tags=['test']) == [
+        'myimage:test',
+    ]
+    assert gen_docker_images('myimage', tags=['test', 'v1.2.3']) == [
+        'myimage:test',
+        'myimage:v1.2.3',
+    ]
+    assert gen_docker_images('repo/myimage:xxx', tags=['test', 'v1.2.3']) == [
+        'repo/myimage:test',
+        'repo/myimage:v1.2.3',
+    ]
+    assert gen_docker_images('repo/myimage:xxx', tags=['test', 'v1.2.3', 'latest', 'test']) == [
+        'repo/myimage:latest',
+        'repo/myimage:test',
+        'repo/myimage:v1.2.3',
+    ]
+    assert gen_docker_images('repo/myimage:xxx', tags=['a', 'c', 'b'], registry='somewhere.com') == [
+        'somewhere.com/repo/myimage:a',
+        'somewhere.com/repo/myimage:b',
+        'somewhere.com/repo/myimage:c',
     ]
