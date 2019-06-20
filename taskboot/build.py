@@ -15,6 +15,9 @@ def gen_docker_images(docker_image_name, tags=None, registry=None):
     if not tags:
         tags = ["latest"]
 
+    # Use unique instances of tags
+    tags = sorted(set(tags))
+
     # Remove any potential existing tag
     tagless_image = docker_image_name.rsplit(":", 1)[0]
 
