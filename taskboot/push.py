@@ -82,22 +82,22 @@ def heroku_release(target, args):
 
     parsed_args = []
 
-    bad_parameter_error_message = f"%r doesn't match format 'dyno-name:/path/to/artifact'"
+    bad_parameter_error_message = "{!r} doesn't match format 'dyno-name:/path/to/artifact'"
 
     # Check format of artifacts params
     for artifact in args.artifacts:
         colon_number = artifact.count(":")
 
         if colon_number != 1:
-            raise Exception(bad_parameter_error_message % artifact)
+            raise Exception(bad_parameter_error_message.format(artifact))
 
         heroku_dyno_name, artifact_path = artifact.split(":", 1)
 
         if not heroku_dyno_name:
-            raise Exception(bad_parameter_error_message % artifact)
+            raise Exception(bad_parameter_error_message.format(artifact))
 
         if not artifact_path:
-            raise Exception(bad_parameter_error_message % artifact)
+            raise Exception(bad_parameter_error_message.format(artifact))
 
         parsed_args.append((heroku_dyno_name, artifact_path))
 
