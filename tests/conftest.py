@@ -1,6 +1,6 @@
 import pytest
 import subprocess
-from taskboot.docker import Docker
+from taskboot.docker import Img
 import os
 
 TESTS_DIR = os.path.realpath(os.path.dirname(__file__))
@@ -11,7 +11,7 @@ def mock_docker(tmpdir):
     '''
     Mock the Docker tool class (img) with a fake state
     '''
-    class MockDocker(Docker):
+    class MockDocker(Img):
         def __init__(self):
             self.state = None
             self.images = []

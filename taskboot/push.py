@@ -4,7 +4,7 @@ import taskcluster
 import requests
 
 from taskboot.config import Configuration
-from taskboot.docker import Skopeo, docker_id_archive
+from taskboot.docker import Docker, Skopeo, docker_id_archive
 from taskboot.utils import load_artifacts, download_artifact
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,14 @@ def push_artifacts(target, args):
     config = Configuration(args)
     assert config.has_docker_auth(), 'Missing Docker authentication'
 
-    # Setup skopeo
-    skopeo = Skopeo(
+    if args.push_tool == "skopeo":
+        push_tool = Skopeo()
+    elif args.push_tool == "docker":
+        push_tool = Docker()
+    else:
+        raise ValueError('Not  supported push tool: {}'.format(args.push_tool))
+
+    push_tool.login(
         config.docker['registry'],
         config.docker['username'],
         config.docker['password'],
@@ -36,20 +42,18 @@ def push_artifacts(target, args):
     artifacts = load_artifacts(args.task_id, queue, args.artifact_filter, args.exclude_filter)
 
     for task_id, artifact_name in artifacts:
-        push_artifact(queue, skopeo, task_id, artifact_name)
+        push_artifact(queue, push_tool, task_id, artifact_name)
 
     logger.info('All found artifacts were pushed.')
 
 
-def push_artifact(queue, skopeo, task_id, artifact_name, custom_tag=None):
+def push_artifact(queue, push_tool, task_id, artifact_name, custom_tag=None):
     '''
     Download an artifact, reads its tags
     and push it on remote repo
     '''
     path = download_artifact(queue, task_id, artifact_name)
-
-    # Push image using skopeo
-    skopeo.push_archive(path, custom_tag)
+    push_tool.push_archive(path, custom_tag)
 
 
 def heroku_release(target, args):
@@ -64,7 +68,8 @@ def heroku_release(target, args):
     assert 'username' in config.heroku and 'password' in config.heroku, 'Missing Heroku authentication'
 
     # Setup skopeo
-    skopeo = Skopeo(
+    skopeo = Skopeo()
+    skopeo.login(
         HEROKU_REGISTRY,
         config.heroku['username'],
         config.heroku['password'],
