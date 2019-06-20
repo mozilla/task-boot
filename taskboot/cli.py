@@ -82,6 +82,13 @@ def main():
         default=[],
         help='Docker build args passed the docker command',
     )
+    build.add_argument(
+        '--build-tool',
+        dest='build_tool',
+        choices=['img', 'docker'],
+        default=os.environ.get('BUILD_TOOL') or 'img',
+        help='Tool to build docker images.'
+    )
     build.set_defaults(func=build_image)
 
     # Build images from a docker-compose.yml file
@@ -147,6 +154,13 @@ def main():
         '--exclude-filter',
         type=str,
         help='If an artifact match the exclude filter it won\'t be uploaded, supports fnmatch syntax.',
+    )
+    artifacts.add_argument(
+        '--push-tool',
+        dest='push_tool',
+        choices=['skopeo', 'docker'],
+        default=os.environ.get('PUSH_TOOL') or 'skopeo',
+        help='Tool to push docker images.'
     )
     artifacts.set_defaults(func=push_artifacts)
 
