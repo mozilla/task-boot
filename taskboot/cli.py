@@ -178,25 +178,14 @@ def main():
         help='Taskcluster task group to analyse',
     )
     deploy_heroku.add_argument(
-        '--artifact-filter',
-        type=str,
-        help='Filter applied to artifacts paths, supports fnmatch syntax.',
-        required=True,
-    )
-    deploy_heroku.add_argument(
-        '--exclude-filter',
-        type=str,
-        help='If an artifact match the exclude filter it won\'t be uploaded, supports fnmatch syntax.',
-    )
-    deploy_heroku.add_argument(
         '--heroku-app',
         type=str,
         required=True,
     )
     deploy_heroku.add_argument(
-        '--heroku-dyno-type',
-        type=str,
-        default='web',
+        'artifacts',
+        nargs='+',
+        help='the mapping of worker-type:artifact-path to deploy'
     )
     deploy_heroku.set_defaults(func=heroku_release)
 

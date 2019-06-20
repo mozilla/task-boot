@@ -73,35 +73,41 @@ def heroku_release(target, args):
     # Load queue service
     queue = taskcluster.Queue(config.get_taskcluster_options())
 
-    # Get the list of matching artifacts as we should get only one
-    matching_artifacts = load_artifacts(args.task_id, queue, args.artifact_filter, args.exclude_filter)
+    updates_payload = []
 
-    # Push the Docker image
-    if len(matching_artifacts) == 0:
-        raise ValueError(f"No artifact found for {args.artifact_filter}")
-    elif len(matching_artifacts) > 1:
-        raise ValueError(f"More than one artifact found for {args.artifact_filter}: {matching_artifacts!r}")
-    else:
+    for artifact in args.artifacts:
+        heroku_dyno_type, artifact_path = artifact.split(":", 1)
+        logger.info("Searching artifact for dyno type %r with filter %r", heroku_dyno_type, artifact_path)
+
+        # Get the list of matching artifacts as we should get only one
+        matching_artifacts = load_artifacts(args.task_id, queue, artifact_path)
+
+        # Check that we only got one matching artifact
+        if len(matching_artifacts) == 0:
+            raise ValueError(f"No artifact found for {artifact_path}")
+        elif len(matching_artifacts) > 1:
+            raise ValueError(f"More than one artifact found for {artifact_path}: {matching_artifacts!r}")
+
+        # Push the Docker image
         task_id, artifact_name = matching_artifacts[0]
 
-        custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{args.heroku_dyno_type}"
+        custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_type}"
 
         artifact_path = download_artifact(queue, task_id, artifact_name)
 
         skopeo.push_archive(artifact_path, custom_tag_name)
 
-    # Get the Docker image id
-    image_id = docker_id_archive(artifact_path)
+        # Get the Docker image id
+        image_id = docker_id_archive(artifact_path)
+
+        updates_payload.append({"type": heroku_dyno_type, "docker_image": image_id})
 
     # Trigger a release on Heroku
-    logger.info(f"Deploying image id {image_id!r} to Heroku app {args.heroku_app!r} dyno {args.heroku_dyno_type!r}")
-    update = dict(
-        type=args.heroku_dyno_type,
-        docker_image=image_id,
-    )
+    logger.info("Deploying update for dyno types: %r", list(sorted(x["type"] for x in updates_payload)))
+
     r = requests.patch(
             f'https://api.heroku.com/apps/{args.heroku_app}/formation',
-            json=dict(updates=[update]),
+            json=updates_payload,
             headers={
                 'Accept': 'application/vnd.heroku+json; version=3.docker-releases',
                 'Authorization': f"Bearer {config.heroku['password']}",
