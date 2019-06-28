@@ -45,7 +45,7 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add git --quiet &&
+          - "apk add --no-cache git --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --quiet -r requirements-tests.txt . &&
             flake8 && pytest -v"
@@ -84,7 +84,7 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+          - "apk add --no-cache git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --quiet . &&
             taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
@@ -125,7 +125,7 @@ tasks:
           command:
             - sh
             - -lxce
-            - "apk add git skopeo --quiet &&
+            - "apk add --no-cache git skopeo --quiet &&
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
               pip install --quiet . &&
               taskboot push-artifact"
