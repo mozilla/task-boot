@@ -45,9 +45,9 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add git --quiet &&
+          - "apk add --no-cache git --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --quiet -r requirements-tests.txt . &&
+            pip install --no-cache-dir --quiet -r requirements-tests.txt . &&
             flake8 && pytest -v"
       metadata:
         name: TaskBoot code checks
@@ -84,9 +84,9 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+          - "apk add --no-cache git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --quiet . &&
+            pip install --no-cache-dir --quiet . &&
             taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
         artifacts:
           public/taskboot/image.tar:
@@ -125,9 +125,9 @@ tasks:
           command:
             - sh
             - -lxce
-            - "apk add git skopeo --quiet &&
+            - "apk add --no-cache git skopeo --quiet &&
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-              pip install --quiet . &&
+              pip install --no-cache-dir --quiet . &&
               taskboot push-artifact"
         scopes:
           - secrets:get:project/relman/taskboot/deploy
