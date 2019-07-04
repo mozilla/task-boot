@@ -144,4 +144,4 @@ def heroku_release(target, args):
     logger.info("Heroku deployment answer: %s", r.text)
     r.raise_for_status()
 
-    logger.info(f'The {args.heroku_app}/{args.heroku_dyno_name} application has been updated')
+    logger.info(f'The {args.heroku_app} application has been updated')
