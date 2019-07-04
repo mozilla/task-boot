@@ -130,6 +130,9 @@ def heroku_release(target, args):
     # Trigger a release on Heroku
     logger.info("Deploying update for dyno types: %r", list(sorted(x["type"] for x in updates_payload)))
 
+    updates_payload = {"updates": updates_payload}
+    logger.info("Using payload: %r", updates_payload)
+
     r = requests.patch(
             f'https://api.heroku.com/apps/{args.heroku_app}/formation',
             json=updates_payload,
@@ -138,6 +141,7 @@ def heroku_release(target, args):
                 'Authorization': f"Bearer {config.heroku['password']}",
             },
     )
+    logger.info("Heroku deployment answer: %s", r.text)
     r.raise_for_status()
 
     logger.info(f'The {args.heroku_app}/{args.heroku_dyno_name} application has been updated')
