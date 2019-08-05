@@ -38,17 +38,16 @@ tasks:
             - push
       payload:
         maxRunTime: 3600
-        image: python:3-alpine
+        image: python:3
         env:
           GIT_REPOSITORY: ${repository}
           GIT_REVISION: ${head_rev}
         command:
           - sh
           - -lxce
-          - "apk add --no-cache git --quiet &&
-            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+          - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet -r requirements-tests.txt . &&
-            flake8 && pytest -v"
+            pre-commit run -a && pytest -v"
       metadata:
         name: TaskBoot code checks
         description: Taskcluster boot utilities - code linting & unit tests
