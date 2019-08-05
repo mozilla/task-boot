@@ -4,8 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import taskcluster
 import os
+
+import taskcluster
 import yaml
 
 logger = logging.getLogger(__name__)

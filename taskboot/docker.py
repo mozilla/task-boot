@@ -3,19 +3,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from dockerfile_parse import DockerfileParser
-import subprocess
-import shutil
-import tempfile
+import base64
+import hashlib
 import io
+import json
 import logging
 import os
-import base64
-import tarfile
 import re
-import json
-import hashlib
+import shutil
+import subprocess
+import tarfile
+import tempfile
 
+from dockerfile_parse import DockerfileParser
 
 logger = logging.getLogger(__name__)
 

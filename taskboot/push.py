@@ -4,13 +4,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import taskcluster
 
 import requests
+import taskcluster
 
 from taskboot.config import Configuration
-from taskboot.docker import Docker, Skopeo, docker_id_archive
-from taskboot.utils import load_artifacts, download_artifact
+from taskboot.docker import Docker
+from taskboot.docker import Skopeo
+from taskboot.docker import docker_id_archive
+from taskboot.utils import download_artifact
+from taskboot.utils import load_artifacts
 
 logger = logging.getLogger(__name__)
 

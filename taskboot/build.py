@@ -3,15 +3,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import uuid
-import os.path
-import yaml
 import json
-import taskcluster
-from taskboot.config import Configuration, TASKCLUSTER_DASHBOARD_URL
-from taskboot.docker import Docker, Img, patch_dockerfile
-from taskboot.utils import retry
 import logging
+import os.path
+import uuid
+
+import taskcluster
+import yaml
+
+from taskboot.config import TASKCLUSTER_DASHBOARD_URL
+from taskboot.config import Configuration
+from taskboot.docker import Docker
+from taskboot.docker import Img
+from taskboot.docker import patch_dockerfile
+from taskboot.utils import retry
 
 logger = logging.getLogger(__name__)
 

@@ -4,12 +4,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-from taskboot.build import build_image, build_compose, build_hook
-from taskboot.push import push_artifacts, heroku_release
-from taskboot.aws import push_s3
-from taskboot.target import Target
 import logging
 import os
+
+from taskboot.aws import push_s3
+from taskboot.build import build_compose
+from taskboot.build import build_hook
+from taskboot.build import build_image
+from taskboot.push import heroku_release
+from taskboot.push import push_artifacts
+from taskboot.target import Target
 
 logging.basicConfig(level=logging.INFO)
 

@@ -3,14 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import requests
 import logging
-import time
-import taskcluster
 import os
 import tempfile
+import time
 from fnmatch import fnmatch
 
+import requests
+import taskcluster
 
 logger = logging.getLogger(__name__)
 

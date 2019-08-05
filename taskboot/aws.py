@@ -4,14 +4,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import taskcluster
 import mimetypes
 
 import boto3
 import botocore.exceptions
+import taskcluster
 
 from taskboot.config import Configuration
-from taskboot.utils import load_artifacts, download_artifact
+from taskboot.utils import download_artifact
+from taskboot.utils import load_artifacts
 
 logger = logging.getLogger(__name__)
 

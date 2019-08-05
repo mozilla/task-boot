@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import tempfile
-import subprocess
 import os
+import subprocess
+import tempfile
 
 logger = logging.getLogger(__name__)
 

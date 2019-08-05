@@ -3,14 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from taskboot.docker import (
-    parse_image_name,
-    patch_dockerfile,
-    read_manifest,
-    write_manifest,
-)
-from taskboot.build import gen_docker_images
 import uuid
+
+from taskboot.build import gen_docker_images
+from taskboot.docker import parse_image_name
+from taskboot.docker import patch_dockerfile
+from taskboot.docker import read_manifest
+from taskboot.docker import write_manifest
 
 DOCKERFILE_SIMPLE = """
 FROM project/base:latest
