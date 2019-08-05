@@ -8,17 +8,17 @@ class Config(object):
 
 
 def test_path():
-    '''
+    """
     Test a path exists in a target
-    '''
+    """
     conf = Config()
     target = Target(conf)
 
     assert os.path.isdir(target.dir)
 
-    with open(os.path.join(target.dir, 'test.txt'), 'w') as f:
-        f.write('Test')
+    with open(os.path.join(target.dir, "test.txt"), "w") as f:
+        f.write("Test")
 
-    path = target.check_path('test.txt')
+    path = target.check_path("test.txt")
     assert os.path.exists(path)
     assert path.startswith(target.dir)
