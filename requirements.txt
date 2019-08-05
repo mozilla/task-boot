@@ -1,4 +1,4 @@
 boto3>=1.9
 dockerfile-parse==0.0.15
-taskcluster==7.0.1
+taskcluster==16.0.0
 pyyaml==5.1.2
