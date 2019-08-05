@@ -22,7 +22,7 @@ HEROKU_REGISTRY = "registry.heroku.com"
 
 def push_artifacts(target, args):
     """
-    Push all artifacts from dependant tasks
+    Push all artifacts from dependent tasks
     """
     assert args.task_id is not None, "Missing task id"
 
@@ -66,7 +66,7 @@ def push_artifact(queue, push_tool, task_id, artifact_name, custom_tag=None):
 
 def heroku_release(target, args):
     """
-    Push all artifacts from dependant tasks
+    Push all artifacts from dependent tasks
     """
     assert args.task_id is not None, "Missing task id"
 

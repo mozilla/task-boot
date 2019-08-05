@@ -151,7 +151,7 @@ def main():
 
     # Push docker images produced in other tasks
     artifacts = commands.add_parser(
-        "push-artifact", help="Push docker images produced in dependant tasks"
+        "push-artifact", help="Push docker images produced in dependent tasks"
     )
     artifacts.add_argument(
         "--task-id",

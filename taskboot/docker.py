@@ -181,7 +181,7 @@ class Docker(Tool):
 
             logger.info("Pushing image as {}".format(tag))
             self.push(tag)
-            logger.info("Push successfull")
+            logger.info("Push successful")
 
 
 class Img(Tool):
@@ -330,7 +330,7 @@ class Skopeo(Tool):
                 "docker://{}".format(tag),
             ]
             self.run(cmd)
-            logger.info("Push successfull")
+            logger.info("Push successful")
 
 
 def docker_id_archive(path):
