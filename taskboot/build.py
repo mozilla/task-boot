@@ -9,9 +9,9 @@ import os.path
 import uuid
 
 import taskcluster
+import taskcluster_urls
 import yaml
 
-from taskboot.config import TASKCLUSTER_DASHBOARD_URL
 from taskboot.config import Configuration
 from taskboot.docker import Docker
 from taskboot.docker import Img
@@ -205,7 +205,7 @@ def build_hook(target, args):
         hooks.createHook(hook_group_id, hook_id, payload)
         logger.info("Hook %s was successfully created", hook_name)
 
-    hook_url = "{}/hooks/{}/{}".format(
-        TASKCLUSTER_DASHBOARD_URL, hook_group_id, hook_id
+    hook_url = taskcluster_urls.ui(
+        config.get_root_url(), "hooks/{}/{}".format(hook_group_id, hook_id)
     )
     logger.info("Hook URL for debugging: %r", hook_url)
