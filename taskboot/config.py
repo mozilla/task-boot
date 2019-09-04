@@ -12,7 +12,6 @@ import yaml
 logger = logging.getLogger(__name__)
 
 TASKCLUSTER_DEFAULT_URL = "https://taskcluster.net"
-TASKCLUSTER_DASHBOARD_URL = "https://tools.taskcluster.net"
 
 
 class Configuration(object):
@@ -30,6 +29,11 @@ class Configuration(object):
         if key in self.config:
             return self.config[key]
         raise KeyError
+
+    def get_root_url(self):
+        if "TASKCLUSTER_ROOT_URL" in os.environ:
+            return os.environ["TASKCLUSTER_ROOT_URL"]
+        return TASKCLUSTER_DEFAULT_URL
 
     def get_taskcluster_options(self):
         """
