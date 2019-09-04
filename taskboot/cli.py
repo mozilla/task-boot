@@ -13,6 +13,7 @@ from taskboot.build import build_hook
 from taskboot.build import build_image
 from taskboot.push import heroku_release
 from taskboot.push import push_artifacts
+from taskboot.pypi import publish_pypi
 from taskboot.target import Target
 
 logging.basicConfig(level=logging.INFO)
@@ -226,6 +227,18 @@ def main():
         "--bucket", type=str, help="The S3 bucket to use", required=True
     )
     deploy_s3.set_defaults(func=push_s3)
+
+    # Publish on a PyPi repository
+    deploy_pypi = commands.add_parser(
+        "deploy-pypi", help="Publish source code on a Pypi repository"
+    )
+    deploy_pypi.add_argument(
+        "--repository",
+        type=str,
+        default=os.environ.get("PYPI_REPOSITORY"),
+        help="PyPi repository to use for publication",
+    )
+    deploy_pypi.set_defaults(func=publish_pypi)
 
     # Always load the target
     args = parser.parse_args()
