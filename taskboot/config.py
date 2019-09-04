@@ -71,3 +71,9 @@ class Configuration(object):
         if aws is None:
             return False
         return "access_key_id" in aws and "secret_access_key" in aws
+
+    def has_pypi_auth(self):
+        pypi = self.config.get("pypi")
+        if pypi is None:
+            return False
+        return "username" in pypi and "password" in pypi
