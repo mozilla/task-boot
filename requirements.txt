@@ -1,6 +1,6 @@
 boto3>=1.9
 dockerfile-parse==0.0.15
-taskcluster==21.0.0
+taskcluster==21.2.0
 taskcluster-urls==11.0.0
 twine==2.0.0
 pyyaml==5.1.2
