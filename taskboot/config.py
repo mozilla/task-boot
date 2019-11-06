@@ -11,9 +11,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-TASKCLUSTER_DEFAULT_URL = os.environ.get(
-    "TASKCLUSTER_ROOT_URL", "https://taskcluster.net"
-)
+TASKCLUSTER_DEFAULT_URL = "https://taskcluster.net"
 
 
 class Configuration(object):
