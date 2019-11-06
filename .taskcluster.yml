@@ -25,8 +25,8 @@ tasks:
       else: ${event.repository.html_url}
   in:
     - taskId: {$eval: as_slugid("code_checks")}
-      provisionerId: aws-provisioner-v1
-      workerType: github-worker
+      provisionerId: proj-relman
+      workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       extra:
@@ -57,8 +57,8 @@ tasks:
     - taskId: {$eval: as_slugid("docker_build")}
       dependencies:
         - {$eval: as_slugid("code_checks")}
-      provisionerId: aws-provisioner-v1
-      workerType: releng-svc
+      provisionerId: proj-relman
+      workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       extra:
@@ -105,8 +105,8 @@ tasks:
         taskId: {$eval: as_slugid("docker_push")}
         dependencies:
           - {$eval: as_slugid("docker_build")}
-        provisionerId: aws-provisioner-v1
-        workerType: github-worker
+        provisionerId: proj-relman
+        workerType: ci
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
         extra:
