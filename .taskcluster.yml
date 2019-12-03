@@ -38,7 +38,7 @@ tasks:
             - push
       payload:
         maxRunTime: 3600
-        image: python:3
+        image: python:3.7
         env:
           GIT_REPOSITORY: ${repository}
           GIT_REVISION: ${head_rev}
@@ -72,7 +72,7 @@ tasks:
         capabilities:
           privileged: true
         maxRunTime: 3600
-        image: python:3-alpine
+        image: python:3.7-alpine
         env:
           IMAGE: mozilla/taskboot
           REGISTRY: registry.hub.docker.com
@@ -118,7 +118,7 @@ tasks:
             # Needed for access to secret
             taskclusterProxy: true
           maxRunTime: 3600
-          image: python:3-alpine
+          image: python:3.7-alpine
           env:
             TASKCLUSTER_SECRET: project/relman/taskboot/deploy
           command:
