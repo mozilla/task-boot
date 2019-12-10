@@ -3,7 +3,7 @@ dockerfile-parse==0.0.15
 taskcluster==23.0.0
 taskcluster-urls==12.1.0
 twine==2.0.0
-pyyaml==5.1.2
+pyyaml==5.2
 
 # limits to avoid building with gcc on alpine
 multidict<4.6.0
