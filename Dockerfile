@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:experimental
-FROM python:3-alpine
+FROM python:3.7-alpine
 
 ARG BUILD_DIR=/build
 
