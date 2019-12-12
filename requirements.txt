@@ -5,4 +5,4 @@ pyyaml==5.2
 taskcluster==24.1.1
 taskcluster-urls==12.1.0
 twine==2.0.0
-yarl<1.4.0
+yarl<1.5.0
