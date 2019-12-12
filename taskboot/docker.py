@@ -19,10 +19,10 @@ from dockerfile_parse import DockerfileParser
 
 logger = logging.getLogger(__name__)
 
-# docker.io/mozilla/taskboot:latest  172.3MiB  25 hours ago  About an hour ago  sha256:e339e39884d2a6f44b493e8f135e5275d0e47209b3f990b768228534944db6e7  # noqa
+# docker.io/mozilla/taskboot:latest  172.3MiB  25 hours ago  About an hour ago  sha256:e339e39884d2a6f44b493e8f135e5275d0e47209b3f990b768228534944db6e7
 IMG_LS_REGEX = re.compile(
     r"([\w\.]+)/(([\w\-_\.]+)/([\w\-_\.]+)):([\w\-_\.]+)\t+([\.\w]+)\t+([\w ]+)\t+([\w ]+)\t+sha256:(\w{64})"
-)  # noqa
+)
 
 IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
 

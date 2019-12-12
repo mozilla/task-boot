@@ -134,7 +134,7 @@ def test_list_local_images(mock_docker):
             "1 days ago",
             "1 days ago",
             "sha256:991d19e5156799aa79cf7138b8b843601f180e68f625b892df40a1993b7ac7da",
-        )  # noqa
+        )
     ]
     assert mock_docker.list_images() == [
         {
