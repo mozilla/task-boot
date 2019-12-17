@@ -60,6 +60,10 @@ def push_s3(target, args):
 
         # Detect mime/type to set valid content-type for web requests
         content_type, _ = mimetypes.guess_type(local_path)
+        if content_type is None:
+            # Use a default content type to avoid crashes on upload
+            # when a file's MIME type is not detected
+            content_type = "text/plain"
 
         # Push that artifact on the S3 bucket, without the artifact folder
         s3_path = artifact_name[len(args.artifact_folder) + 1 :]
