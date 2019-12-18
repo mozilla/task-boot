@@ -172,7 +172,7 @@ tasks:
         scopes:
           - secrets:get:project/relman/taskboot/deploy
         metadata:
-          name: TaskBoot docker push
-          description: Taskcluster boot utilities - push docker image
+          name: TaskBoot github release
+          description: Taskcluster boot utilities - ship a new release
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/task-boot
