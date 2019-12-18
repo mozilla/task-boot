@@ -167,7 +167,7 @@ tasks:
           command:
             - taskboot
             - github-release
-            - mozilla/taskboot
+            - mozilla/task-boot
             - "${tag}"
         scopes:
           - secrets:get:project/relman/taskboot/deploy
