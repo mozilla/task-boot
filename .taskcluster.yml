@@ -23,19 +23,20 @@ tasks:
       $if: 'tasks_for == "github-pull-request"'
       then: ${event.pull_request.head.repo.html_url}
       else: ${event.repository.html_url}
+
+    tag:
+      $if: 'tasks_for == "github-push"'
+      then:
+        $if: 'event.ref[:10] == "refs/tags/"'
+        then: {$eval: 'event.ref[10:]' }
+        else: "latest"
+      else: "latest"
   in:
     - taskId: {$eval: as_slugid("code_checks")}
       provisionerId: proj-relman
       workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
       payload:
         maxRunTime: 3600
         image: python:3.7
@@ -61,13 +62,6 @@ tasks:
       workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
       payload:
         capabilities:
           privileged: true
@@ -76,10 +70,7 @@ tasks:
         env:
           IMAGE: mozilla/taskboot
           REGISTRY: registry.hub.docker.com
-          VERSION:
-            $if: 'head_branch[:10] == "refs/tags/"'
-            then: {$eval: 'head_branch[10:]' }
-            else: "latest"
+          VERSION: "${tag}"
         command:
           - sh
           - -lxce
@@ -109,10 +100,6 @@ tasks:
         workerType: ci
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
-        extra:
-          github:
-            events:
-              - push
         payload:
           features:
             # Needed for access to secret
@@ -133,5 +120,37 @@ tasks:
         metadata:
           name: TaskBoot docker push
           description: Taskcluster boot utilities - push docker image
+          owner: bastien@mozilla.com
+          source: https://github.com/mozilla/task-boot
+
+    - $if: 'tasks_for == "github-push" && head_branch[:10] == "refs/tags/"'
+      then:
+        taskId: {$eval: as_slugid("release")}
+        dependencies:
+          - {$eval: as_slugid("docker_push")}
+        provisionerId: proj-relman
+        workerType: ci
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '1 hour'}
+        payload:
+          features:
+            # Needed for access to secret
+            taskclusterProxy: true
+          maxRunTime: 3600
+
+          # Use the image just uploaded !
+          image: "mozilla/taskboot:${tag}"
+          env:
+            TASKCLUSTER_SECRET: project/relman/taskboot/deploy
+          command:
+            - taskboot
+            - github-release
+            - mozilla/task-boot
+            - "${tag}"
+        scopes:
+          - secrets:get:project/relman/taskboot/deploy
+        metadata:
+          name: "TaskBoot github release ${tag}"
+          description: Taskcluster boot utilities - ship a new release
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/task-boot
