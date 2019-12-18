@@ -20,13 +20,16 @@ def build_release_notes(repository, tag):
     )
 
     # Get all commits between both versions using the comparison endpoint
-    latest_release = repository.get_latest_release()
-    diff = repository.compare(latest_release.tag_name, tag.ref)
+    try:
+        latest_release = repository.get_latest_release()
+        diff = repository.compare(latest_release.tag_name, tag.ref)
+        commits = diff.commits
+    except UnknownObjectException:
+        logger.info("No previous release available, will use all commits on repo")
+        commits = repository.get_commits()
 
     # Use first line of every commit in between versions
-    lines = [
-        "- {}".format(commit.commit.message.splitlines()[0]) for commit in diff.commits
-    ]
+    lines = ["- {}".format(commit.commit.message.splitlines()[0]) for commit in commits]
 
     return "\n".join(lines) + signature
 
