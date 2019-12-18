@@ -81,3 +81,9 @@ class Configuration(object):
         if pypi is None:
             return False
         return "username" in pypi and "password" in pypi
+
+    def has_github_auth(self):
+        github = self.config.get("github")
+        if github is None:
+            return False
+        return "token" in github

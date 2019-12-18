@@ -11,6 +11,7 @@ from taskboot.aws import push_s3
 from taskboot.build import build_compose
 from taskboot.build import build_hook
 from taskboot.build import build_image
+from taskboot.github import github_release
 from taskboot.push import heroku_release
 from taskboot.push import push_artifacts
 from taskboot.pypi import publish_pypi
@@ -239,6 +240,32 @@ def main():
         help="PyPi repository to use for publication",
     )
     deploy_pypi.set_defaults(func=publish_pypi)
+
+    # Deploy as a github release
+    github_release_cmd = commands.add_parser(
+        "github-release", help="Create a GitHub release and publish assets"
+    )
+    github_release_cmd.add_argument(
+        "repository",
+        type=str,
+        help="Github repository name to use (example: mozilla/task-boot)",
+    )
+    github_release_cmd.add_argument(
+        "version", type=str, help="Release version tag to create or update on github"
+    )
+    github_release_cmd.add_argument(
+        "--task-id",
+        type=str,
+        default=os.environ.get("TASK_ID"),
+        help="Taskcluster task group to analyse",
+    )
+    github_release_cmd.add_argument(
+        "--asset",
+        nargs="+",
+        type=str,
+        help="Asset to upload on the release, retrieved from previously created artifacts. Format is asset-name:path/to/artifact",
+    )
+    github_release_cmd.set_defaults(func=github_release)
 
     # Always load the target
     args = parser.parse_args()
