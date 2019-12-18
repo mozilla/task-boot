@@ -37,13 +37,6 @@ tasks:
       workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
       payload:
         maxRunTime: 3600
         image: python:3.7
@@ -69,13 +62,6 @@ tasks:
       workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      extra:
-        github:
-          events:
-            - pull_request.opened
-            - pull_request.reopened
-            - pull_request.synchronize
-            - push
       payload:
         capabilities:
           privileged: true
@@ -114,10 +100,6 @@ tasks:
         workerType: ci
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
-        extra:
-          github:
-            events:
-              - push
         payload:
           features:
             # Needed for access to secret
@@ -150,10 +132,6 @@ tasks:
         workerType: ci
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
-        extra:
-          github:
-            events:
-              - push
         payload:
           features:
             # Needed for access to secret
