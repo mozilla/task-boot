@@ -14,6 +14,7 @@ from taskboot.docker import Skopeo
 from taskboot.docker import docker_id_archive
 from taskboot.utils import download_artifact
 from taskboot.utils import load_artifacts
+from taskboot.utils import load_named_artifacts
 
 logger = logging.getLogger(__name__)
 
@@ -81,56 +82,12 @@ def heroku_release(target, args):
     skopeo = Skopeo()
     skopeo.login(HEROKU_REGISTRY, config.heroku["username"], config.heroku["password"])
 
-    # Load queue service
-    queue = taskcluster.Queue(config.get_taskcluster_options())
-
     updates_payload = []
 
-    parsed_args = []
-
-    bad_parameter_error_message = (
-        "{!r} doesn't match format 'dyno-name:/path/to/artifact'"
-    )
-
-    # Check format of artifacts params
-    for artifact in args.artifacts:
-        colon_number = artifact.count(":")
-
-        if colon_number != 1:
-            raise Exception(bad_parameter_error_message.format(artifact))
-
-        heroku_dyno_name, artifact_path = artifact.split(":", 1)
-
-        if not heroku_dyno_name:
-            raise Exception(bad_parameter_error_message.format(artifact))
-
-        if not artifact_path:
-            raise Exception(bad_parameter_error_message.format(artifact))
-
-        parsed_args.append((heroku_dyno_name, artifact_path))
-
-    for heroku_dyno_name, artifact_path in parsed_args:
-        logger.info(
-            f"Searching artifact for dyno type {heroku_dyno_name} with filter {artifact_path}"
-        )
-
-        # Get the list of matching artifacts as we should get only one
-        matching_artifacts = load_artifacts(args.task_id, queue, artifact_path)
-
-        # Check that we only got one matching artifact
-        if len(matching_artifacts) == 0:
-            raise ValueError(f"No artifact found for {artifact_path}")
-        elif len(matching_artifacts) > 1:
-            raise ValueError(
-                f"More than one artifact found for {artifact_path}: {matching_artifacts!r}"
-            )
+    for heroku_dyno_name, _, artifact_path in load_named_artifacts(args.artifacts):
 
         # Push the Docker image
-        task_id, artifact_name = matching_artifacts[0]
-
         custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_name}"
-
-        artifact_path = download_artifact(queue, task_id, artifact_name)
 
         skopeo.push_archive(artifact_path, custom_tag_name)
 

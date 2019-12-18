@@ -115,3 +115,51 @@ def download_artifact(queue, task_id, artifact_name):
     retry(lambda: download_progress(url, path))
 
     return path
+
+
+def load_named_artifacts(config, source_task_id, arguments):
+    """
+    Parse a list of CLI arguments used to name artifacts as name:path/to/artifact
+    Download the relevant artifact from the targeted task and outputs
+    the path for further processing
+    """
+    if not arguments:
+        logger.info("No artifact arguments to process")
+        return
+
+    bad_parameter_error_message = "{!r} doesn't match format 'name:path/to/artifact'"
+
+    queue = taskcluster.Queue(config.get_taskcluster_options())
+
+    for artifact in arguments:
+        colon_number = artifact.count(":")
+
+        if colon_number != 1:
+            raise Exception(bad_parameter_error_message.format(artifact))
+
+        name, artifact_path = artifact.split(":", 1)
+
+        if not name:
+            raise Exception(bad_parameter_error_message.format(artifact))
+
+        if not artifact_path:
+            raise Exception(bad_parameter_error_message.format(artifact))
+
+        logger.info(f"Searching artifact {name} with filter {artifact_path}")
+
+        # Get the list of matching artifacts as we should get only one
+        matching_artifacts = load_artifacts(source_task_id, queue, artifact_path)
+
+        # Check that we only got one matching artifact
+        if len(matching_artifacts) == 0:
+            raise ValueError(f"No artifact found for {artifact_path}")
+        elif len(matching_artifacts) > 1:
+            raise ValueError(
+                f"More than one artifact found for {artifact_path}: {matching_artifacts!r}"
+            )
+
+        # Download the artifact to process it later locally
+        artifact_task_id, artifact_name = matching_artifacts[0]
+        artifact_path = download_artifact(queue, artifact_task_id, artifact_name)
+
+        yield (name, artifact_name, artifact_path)
