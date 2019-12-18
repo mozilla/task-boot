@@ -49,8 +49,11 @@ def github_release(target, args):
 
     # Setup GitHub API client and load repository
     github = Github(config.github["token"])
-    repository = github.get_repo(args.repository)
-    logger.info(f"Loaded Github repository {repository.full_name} #{repository.id}")
+    try:
+        repository = github.get_repo(args.repository)
+        logger.info(f"Loaded Github repository {repository.full_name} #{repository.id}")
+    except UnknownObjectException:
+        raise Exception(f"Repository {args.repository} is not available")
 
     # Check that tag exists, it must be created by the user manually
     # Usually this task is triggered on a github tag event
