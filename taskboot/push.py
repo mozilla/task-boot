@@ -84,7 +84,9 @@ def heroku_release(target, args):
 
     updates_payload = []
 
-    for heroku_dyno_name, _, artifact_path in load_named_artifacts(args.artifacts):
+    for heroku_dyno_name, _, artifact_path in load_named_artifacts(
+        config, args.task_id, args.artifacts
+    ):
 
         # Push the Docker image
         custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_name}"
