@@ -2,7 +2,7 @@ boto3>=1.9
 dockerfile-parse==0.0.15
 multidict<4.6.0
 PyGithub==1.45
-pyyaml==5.2
+pyyaml==5.3
 taskcluster==24.1.2
 taskcluster-urls==12.1.0
 twine==2.0.0
