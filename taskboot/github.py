@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import re
 
 from github import Github
 from github import UnknownObjectException
@@ -12,6 +13,29 @@ from taskboot.config import Configuration
 from taskboot.utils import load_named_artifacts
 
 logger = logging.getLogger(__name__)
+
+RELEASE_MESSAGE_REGEX = re.compile(r"^(release|version|bump to) ([\w\-_\.]+)$")
+
+
+def is_release_commit(commit, tags):
+    """
+    Check if the github commit is a known tag and has a release message like:
+    - Release XXX
+    - Version XXX
+    - Bump to XXX
+    """
+
+    # Check if that commit is a tag too
+    if commit.commit.sha not in tags:
+        return False
+
+    # Check if the commit matches the release message regex
+    message = commit.commit.message
+    if RELEASE_MESSAGE_REGEX.match(message.lower()):
+        logger.info(f"Detected release commit {commit.commit.sha}: {message}")
+        return True
+
+    return False
 
 
 def build_release_notes(repository, tag):
@@ -28,8 +52,15 @@ def build_release_notes(repository, tag):
         logger.info("No previous release available, will use all commits on repo")
         commits = repository.get_commits()
 
+    # List existing tags sha
+    tags = [tag.commit.sha for tag in repository.get_tags()]
+
     # Use first line of every commit in between versions
-    lines = ["- {}".format(commit.commit.message.splitlines()[0]) for commit in commits]
+    lines = [
+        "- {}".format(commit.commit.message.splitlines()[0])
+        for commit in commits
+        if not is_release_commit(commit, tags)
+    ]
 
     return "\n".join(lines) + signature
 
