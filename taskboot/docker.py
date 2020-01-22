@@ -323,7 +323,7 @@ class DinD(Tool):
         ]
 
     def build(self, context_dir, dockerfile, tags, build_args=[]):
-        logger.info("Building docker image with DinD {}".format(dockerfile))
+        logger.info(f"Building docker image with DinD {dockerfile}")
         build_output = self.client.build(
             path=context_dir, dockerfile=dockerfile, buildargs=build_args, tag=tags
         )
