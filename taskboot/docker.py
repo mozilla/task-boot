@@ -15,6 +15,7 @@ import subprocess
 import tarfile
 import tempfile
 
+import docker as really_old_docker
 from dockerfile_parse import DockerfileParser
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,10 @@ IMG_LS_REGEX = re.compile(
 )
 
 IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
+
+# Taskcluster uses a really outdated version of Docker daemon API
+# so we need to use a *really* outdated client too
+TASKCLUSTER_DIND_API_VERSION = "1.18"
 
 
 def read_archive_tags(path):
@@ -279,6 +284,88 @@ class Img(Tool):
     def push(self, tag):
         logger.info("Pushing image {}".format(tag))
         self.run(["push", "--state", self.state, tag])
+
+
+class DinD(Tool):
+    """
+    Interface to the Docker In Docker Taskcluster feature
+    """
+
+    def __init__(self, cache=None):
+        # Check version of remote daemon
+        self.client = really_old_docker.from_env(version=TASKCLUSTER_DIND_API_VERSION)
+        version = self.client.version()
+        assert (
+            version["ApiVersion"] == TASKCLUSTER_DIND_API_VERSION
+        ), f"DinD version mismatch: {version}"
+
+    def list_images(self):
+        """
+        List images stored on remote daemon
+        """
+
+        def _list_images():
+            for image in self.client.images(all=True):
+                for repo_tag in image["RepoTags"]:
+                    repo, tag = parse_image_name(repo_tag)
+                    image.update({"tag": tag, "repository": repo})
+                    yield image
+
+        return [
+            {
+                "repository": image["repository"],
+                "tag": image["tag"],
+                "size": image["VirtualSize"],
+                "created": image["Created"],
+                "digest": image["Id"],
+            }
+            for image in _list_images()
+        ]
+
+    def build(self, context_dir, dockerfile, tags, build_args=[]):
+        logger.info(f"Building docker image with DinD {dockerfile}")
+        build_output = self.client.build(
+            path=context_dir, dockerfile=dockerfile, buildargs=build_args, tag=tags
+        )
+
+        # The build is not processed if the generator is not used
+        for line in build_output:
+            try:
+                state = json.loads(line)
+                if "stream" in state:
+                    out = state["stream"].rstrip()
+                elif "status" in state:
+                    if "id" in state:
+                        out = f"[{state['id']}] {state['status']}"
+                    else:
+                        out = state["status"]
+                    progress = state.get("progressDetail")
+                    if progress and "current" in progress and "total" in progress:
+                        percent = round(100.0 * progress["current"] / progress["total"])
+                        out += f" {percent}%"
+                logger.info(f"DinD build: {out}")
+            except (KeyError, json.decoder.JSONDecodeError):
+                logger.info(f"DinD build: {line}")
+
+        logger.info("Built image {}".format(", ".join(tags)))
+
+    def save(self, tags, path):
+        assert isinstance(tags, list)
+        assert len(tags) > 0, "Missing tags to save"
+
+        # save the image using only one tag
+        main_tag = tags[0]
+        logger.info("Saving image {} to {}".format(main_tag, path))
+
+        image = self.client.get_image(main_tag)
+        with open(path, "wb") as dest:
+            dest.write(image.data)
+
+    def login(self, *args, **kwargs):
+        raise NotImplementedError("Cannot login using dind")
+
+    def push(self, *args, **kwargs):
+        raise NotImplementedError("Cannot push using dind")
 
 
 class Skopeo(Tool):

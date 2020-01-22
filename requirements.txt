@@ -1,5 +1,6 @@
 boto3>=1.9
 dockerfile-parse==0.0.15
+https://github.com/docker/docker-py/archive/1.10.6.tar.gz#egg=docker-py
 multidict<4.6.0
 PyGithub==1.45
 pyyaml==5.3

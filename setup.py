@@ -7,8 +7,13 @@ from setuptools import setup
 
 
 def requirements(path):
+    lines = []
     with open(path) as f:
-        return f.read().splitlines()
+        for line in f.read().splitlines():
+            if line.startswith("https://"):
+                line = line.split("#")[1].split("egg=")[1]
+            lines.append(line)
+    return sorted(lines)
 
 
 setup(

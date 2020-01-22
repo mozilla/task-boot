@@ -91,6 +91,61 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
+    - taskId: {$eval: as_slugid("docker_build_dind")}
+      dependencies:
+        - {$eval: as_slugid("code_checks")}
+      provisionerId: proj-relman
+      workerType: ci
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      payload:
+        features:
+          dind: true
+        maxRunTime: 3600
+        image: python:3.7-alpine
+        env:
+          IMAGE: mozilla/taskboot
+          REGISTRY: registry.hub.docker.com
+          VERSION: "${tag}"
+        command:
+          - sh
+          - -lxce
+          - "apk add --no-cache git --quiet &&
+            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+            pip install --no-cache-dir --quiet . &&
+            taskboot --target=/src build --build-tool=dind --image=$IMAGE --tag=$VERSION --write /image.tar tests/dockerfile.empty"
+        artifacts:
+          public/taskboot/test-dind.tar:
+            expires: {$fromNow: '2 weeks'}
+            path: /image.tar
+            type: file
+      metadata:
+        name: TaskBoot docker build using Docker in Docker
+        description: Taskcluster boot utilities - build a test image
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
+    - taskId: {$eval: as_slugid("docker_run_dind")}
+      dependencies:
+        - {$eval: as_slugid("docker_build_dind")}
+      provisionerId: proj-relman
+      workerType: ci
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      payload:
+        features:
+          dind: true
+        maxRunTime: 3600
+        image:
+          type: task-image
+          path: public/taskboot/test-dind.tar
+          taskId: {$eval: as_slugid("docker_build_dind")}
+      metadata:
+        name: TaskBoot docker run DinD image
+        description: Taskcluster boot utilities - run a test image
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
     - $if: 'tasks_for == "github-push" && (head_branch == "refs/heads/master" || head_branch[:10] == "refs/tags/")'
       then:
         taskId: {$eval: as_slugid("docker_push")}
