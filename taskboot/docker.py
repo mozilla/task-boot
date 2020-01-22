@@ -347,13 +347,13 @@ class DinD(Tool):
         assert isinstance(tags, list)
         assert len(tags) > 0, "Missing tags to save"
 
-        # First save the image using only one tag
-        # dind does not support (yet) writing multiple tags
+        # save the image using only one tag
         main_tag = tags[0]
         logger.info("Saving image {} to {}".format(main_tag, path))
 
+        image = self.client.get_image(main_tag)
         with open(path, "wb") as dest:
-            dest.write(self.client.get_image(main_tag))
+            dest.write(image.data)
 
     def login(self, *args, **kwargs):
         raise NotImplementedError("Cannot login using dind")
