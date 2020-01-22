@@ -303,6 +303,7 @@ class DinD(Tool):
         """
         List images stored on remote daemon
         """
+        # TODO
         return [
             {
                 "registry": image.group(1),
