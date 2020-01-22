@@ -8,6 +8,6 @@ RUN apk add --no-cache git skopeo docker
 
 # Install taskboot from copied source code
 COPY . /src/taskboot
-pip cd /src/taskboot && install --no-cache-dir .
+RUN pip cd /src/taskboot && install --no-cache-dir .
 
 CMD ["taskboot", "--help"]
