@@ -303,18 +303,23 @@ class DinD(Tool):
         """
         List images stored on remote daemon
         """
-        # TODO
+
+        def _list_images():
+            for image in self.client.images(all=True):
+                for repo_tag in image["RepoTags"]:
+                    repo, tag = parse_image_name(repo_tag)
+                    image.update({"tag": tag, "repository": repo})
+                    yield image
+
         return [
             {
-                "registry": image.group(1),
-                "repository": image.group(2),
-                "tag": image.group(5),
-                "size": image.group(6),
-                "created": image.group(7),
-                "updated": image.group(8),
-                "digest": image.group(9),
+                "repository": image["repository"],
+                "tag": image["tag"],
+                "size": image["VirtualSize"],
+                "created": image["Created"],
+                "digest": image["Id"],
             }
-            for image in self.client.images(all=True)
+            for image in _list_images()
         ]
 
     def build(self, context_dir, dockerfile, tags, build_args=[]):
