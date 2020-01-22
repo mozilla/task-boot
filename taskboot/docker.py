@@ -329,11 +329,14 @@ class DinD(Tool):
                 if "stream" in state:
                     out = state["stream"].rstrip()
                 elif "status" in state:
-                    out = f"[{state['id']}] {state['status']}"
+                    if "id" in state:
+                        out = f"[{state['id']}] {state['status']}"
+                    else:
+                        out = state["status"]
                     progress = state.get("progressDetail")
                     if progress and "current" in progress and "total" in progress:
                         percent = round(100.0 * progress["current"] / progress["total"])
-                        out += f"{percent}%"
+                        out += f" {percent}%"
                 logger.info(f"DinD build: {out}")
             except (KeyError, json.decoder.JSONDecodeError):
                 logger.info(f"DinD build: {line}")

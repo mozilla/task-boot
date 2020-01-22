@@ -77,7 +77,7 @@ tasks:
           - "apk add --no-cache git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet . &&
-            taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile.dind"
+            taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
@@ -113,7 +113,7 @@ tasks:
           - "apk add --no-cache git --quiet &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet . &&
-            taskboot --target=/src build --build-tool=dind --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
+            taskboot --target=/src build --build-tool=dind --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile.dind"
         artifacts:
           public/taskboot/image.tar:
             expires: {$fromNow: '2 weeks'}
