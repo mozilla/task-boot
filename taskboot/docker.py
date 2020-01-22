@@ -318,10 +318,17 @@ class DinD(Tool):
 
     def build(self, context_dir, dockerfile, tags, build_args=[]):
         logger.info("Building docker image with DinD {}".format(dockerfile))
-        out = self.client.build(
+        build_output = self.client.build(
             path=context_dir, dockerfile=dockerfile, buildargs=build_args, tag=tags
         )
-        print("BUILD OUTPUT", out)
+
+        # The build is not processed if the generator is not used
+        for line in build_output:
+            try:
+                stream = json.loads(line)["stream"].rstrip()
+                logger.info(f"DinD build: {stream}")
+            except (KeyError, json.decoder.JSONDecodeError):
+                logger.info("DinD build", line=line)
         logger.info("Built image {}".format(", ".join(tags)))
 
     def save(self, tags, path):
