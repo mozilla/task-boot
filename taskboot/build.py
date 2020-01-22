@@ -13,6 +13,7 @@ import taskcluster_urls
 import yaml
 
 from taskboot.config import Configuration
+from taskboot.docker import DinD
 from taskboot.docker import Docker
 from taskboot.docker import Img
 from taskboot.docker import patch_dockerfile
@@ -53,6 +54,8 @@ def build_image(target, args):
         build_tool = Img(cache=args.cache)
     elif args.build_tool == "docker":
         build_tool = Docker()
+    elif args.build_tool == "dind":
+        build_tool = DinD()
     else:
         raise ValueError("Unsupported build tool: {}".format(args.build_tool))
 

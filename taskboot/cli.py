@@ -94,7 +94,7 @@ def main():
     build.add_argument(
         "--build-tool",
         dest="build_tool",
-        choices=["img", "docker"],
+        choices=["img", "docker", "dind"],
         default=os.environ.get("BUILD_TOOL") or "img",
         help="Tool to build docker images.",
     )

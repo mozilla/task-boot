@@ -15,6 +15,7 @@ import subprocess
 import tarfile
 import tempfile
 
+import docker as really_old_docker
 from dockerfile_parse import DockerfileParser
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,10 @@ IMG_LS_REGEX = re.compile(
 )
 
 IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
+
+# Taskcluster uses a really outdated version of Docker daemon API
+# so we need to use a *really* outdated client too
+TASKCLUSTER_DIND_API_VERSION = "1.18"
 
 
 def read_archive_tags(path):
@@ -279,6 +284,63 @@ class Img(Tool):
     def push(self, tag):
         logger.info("Pushing image {}".format(tag))
         self.run(["push", "--state", self.state, tag])
+
+
+class DinD(Tool):
+    """
+    Interface to the Docker In Docker Taskcluster feature
+    """
+
+    def __init__(self, cache=None):
+        # Check version of remote daemon
+        self.client = really_old_docker.from_env(version=TASKCLUSTER_DIND_API_VERSION)
+        version = self.client.version()
+        assert (
+            version["ApiVersion"] == TASKCLUSTER_DIND_API_VERSION
+        ), f"DinD version mismatch: {version}"
+
+    def list_images(self):
+        """
+        List images stored on remote daemon
+        """
+        return [
+            {
+                "registry": image.group(1),
+                "repository": image.group(2),
+                "tag": image.group(5),
+                "size": image.group(6),
+                "created": image.group(7),
+                "updated": image.group(8),
+                "digest": image.group(9),
+            }
+            for image in self.client.images(all=True)
+        ]
+
+    def build(self, context_dir, dockerfile, tags, build_args=[]):
+        logger.info("Building docker image with DinD {}".format(dockerfile))
+        out = self.client.build(
+            path=context_dir, dockerfile=dockerfile, buildargs=build_args, tag=tags
+        )
+        print("BUILD OUTPUT", out)
+        logger.info("Built image {}".format(", ".join(tags)))
+
+    def save(self, tags, path):
+        assert isinstance(tags, list)
+        assert len(tags) > 0, "Missing tags to save"
+
+        # First save the image using only one tag
+        # dind does not support (yet) writing multiple tags
+        main_tag = tags[0]
+        logger.info("Saving image {} to {}".format(main_tag, path))
+
+        with open(path, "wb") as dest:
+            dest.write(self.client.get_image(main_tag))
+
+    def login(self, *args, **kwargs):
+        raise NotImplementedError("Cannot login using dind")
+
+    def push(self, *args, **kwargs):
+        raise NotImplementedError("Cannot push using dind")
 
 
 class Skopeo(Tool):
