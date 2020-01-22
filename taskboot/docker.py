@@ -325,10 +325,19 @@ class DinD(Tool):
         # The build is not processed if the generator is not used
         for line in build_output:
             try:
-                stream = json.loads(line)["stream"].rstrip()
-                logger.info(f"DinD build: {stream}")
+                state = json.loads(line)
+                if "stream" in state:
+                    out = state["stream"].rstrip()
+                elif "status" in state:
+                    out = f"[{state['id']}] {state['status']}"
+                    progress = state.get("progressDetail")
+                    if progress and "current" in progress and "total" in progress:
+                        percent = round(100.0 * progress["current"] / progress["total"])
+                        out += f"{percent}%"
+                logger.info(f"DinD build: {out}")
             except (KeyError, json.decoder.JSONDecodeError):
                 logger.info(f"DinD build: {line}")
+
         logger.info("Built image {}".format(", ".join(tags)))
 
     def save(self, tags, path):
