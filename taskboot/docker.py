@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
 
 import docker as really_old_docker
 from dockerfile_parse import DockerfileParser
@@ -368,6 +369,7 @@ class DinD(Tool):
                     raise Exception(
                         "Failed to build the docker image, too many read errors"
                     )
+                time.sleep(i)
                 continue
 
             # If we reach past the inner loop without hitting the Read exception
