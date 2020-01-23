@@ -5,6 +5,7 @@
 
 import base64
 import hashlib
+import http.client
 import io
 import json
 import logging
@@ -328,8 +329,7 @@ class DinD(Tool):
             path=context_dir, dockerfile=dockerfile, buildargs=build_args, tag=tags
         )
 
-        # The build is not processed if the generator is not used
-        for line in build_output:
+        def _read_line(line):
             try:
                 state = json.loads(line)
                 if "stream" in state:
@@ -343,9 +343,36 @@ class DinD(Tool):
                     if progress and "current" in progress and "total" in progress:
                         percent = round(100.0 * progress["current"] / progress["total"])
                         out += f" {percent}%"
+                elif "error" in state:
+                    logger.error(f"DinD build: {state['error']}")
+                    return
+                else:
+                    out = repr(state)
                 logger.info(f"DinD build: {out}")
             except (KeyError, json.decoder.JSONDecodeError):
                 logger.info(f"DinD build: {line}")
+
+        # Process the docker build by reading the client stream
+        # Sometimes the docker daemon does not respond, crashing the inner read code
+        # So we retry a few times before giving up
+        max_try = 5
+        for i in range(1, max_try + 1):
+            try:
+                for line in build_output:
+                    _read_line(line)
+            except http.client.IncompleteRead:
+                logger.error(
+                    f"Error while reading Docker daemon output, on try {i}/{max_try}"
+                )
+                if i == max_try:
+                    raise Exception(
+                        "Failed to build the docker image, too many read errors"
+                    )
+                continue
+
+            # If we reach past the inner loop without hitting the Read exception
+            # the generator has been fully consumed, so the build is done
+            break
 
         logger.info("Built image {}".format(", ".join(tags)))
 
