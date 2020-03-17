@@ -4,7 +4,7 @@ dockerfile-parse==0.0.16
 multidict<4.6.0
 PyGithub==1.47
 pyyaml==5.3
-taskcluster==26.0.1
+taskcluster==28.0.0
 taskcluster-urls==12.1.0
 twine==2.0.0
 yarl<1.4.0
