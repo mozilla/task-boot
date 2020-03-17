@@ -1,2 +1,2 @@
-pre-commit
-pytest
+pre-commit==2.2.0
+pytest==5.4.1

@@ -48,7 +48,7 @@ tasks:
           - -lxce
           - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet -r requirements-tests.txt . &&
-            pre-commit run -a && pytest -v"
+            pre-commit run -a --show-diff-on-failure && pytest -v"
       metadata:
         name: TaskBoot code checks
         description: Taskcluster boot utilities - code linting & unit tests
