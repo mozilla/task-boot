@@ -6,7 +6,9 @@
 import argparse
 import logging
 import os
+import pathlib
 
+from taskboot.artifacts import retrieve_artifacts
 from taskboot.aws import push_s3
 from taskboot.build import build_compose
 from taskboot.build import build_hook
@@ -51,7 +53,9 @@ def main():
         "--target", type=str, help="Target directory to use a local project"
     )
     parser.add_argument(
-        "--cache", type=str, help="Path to a local folder used to cache build processes"
+        "--cache",
+        type=str,
+        help="Path to a local folder used to cache build processes",
     )
     commands = parser.add_subparsers(help="sub-command help")
     parser.set_defaults(func=usage)
@@ -150,6 +154,28 @@ def main():
         help="Use a specific tag on this image, default to latest tag",
     )
     compose.set_defaults(func=build_compose)
+
+    # Download all artifacts from a specific task
+    download_artifacts = commands.add_parser(
+        "retrieve-artifact", help="Download all artifacts from a specific task",
+    )
+    download_artifacts.add_argument(
+        "--task-id",
+        type=str,
+        default=os.environ.get("TASK_ID"),
+        help="Taskcluster task group to analyse",
+    )
+    download_artifacts.add_argument(
+        "--output-path",
+        type=lambda value: pathlib.Path(value),
+        help="Output path for artifacts.",
+    )
+    download_artifacts.add_argument(
+        "--artifacts",
+        nargs="+",
+        help="the mapping of worker-type:artifact-path to download",
+    )
+    download_artifacts.set_defaults(func=retrieve_artifacts)
 
     # Push docker images produced in other tasks
     artifacts = commands.add_parser(
@@ -251,7 +277,7 @@ def main():
         help="Github repository name to use (example: mozilla/task-boot)",
     )
     github_release_cmd.add_argument(
-        "version", type=str, help="Release version tag to create or update on github"
+        "version", type=str, help="Release version tag to create or update on github",
     )
     github_release_cmd.add_argument(
         "--task-id",

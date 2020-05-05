@@ -88,7 +88,8 @@ def load_artifacts(task_id, queue, artifact_filter, exclude_filter=None):
 
                 if exclude_filter and fnmatch(artifact_name, exclude_filter):
                     logger.info(
-                        "Excluding artifact %s because of exclude filter", artifact_name
+                        "Excluding artifact %s because of exclude filter",
+                        artifact_name,
                     )
                     continue
 
@@ -97,7 +98,7 @@ def load_artifacts(task_id, queue, artifact_filter, exclude_filter=None):
     return matching_artifacts
 
 
-def download_artifact(queue, task_id, artifact_name):
+def download_artifact(queue, task_id, artifact_name, output_directory=None):
     """
     Download a Taskcluster artifact into a local tempfile
     """
@@ -109,15 +110,20 @@ def download_artifact(queue, task_id, artifact_name):
     except taskcluster.exceptions.TaskclusterAuthFailure:
         url = queue.buildUrl("getLatestArtifact", task_id, artifact_name)
 
-    # Download the artifact in a temporary file
-    _, ext = os.path.splitext(artifact_name)
-    _, path = tempfile.mkstemp(suffix="-taskboot{}".format(ext))
+    if output_directory is None:
+        # Download the artifact in a temporary file
+        _, ext = os.path.splitext(artifact_name)
+        _, path = tempfile.mkstemp(suffix="-taskboot{}".format(ext))
+    else:
+        # Download the artifact in a specific directory
+        path = output_directory / artifact_name
+
     retry(lambda: download_progress(url, path))
 
     return path
 
 
-def load_named_artifacts(config, source_task_id, arguments):
+def load_named_artifacts(config, source_task_id, arguments, output_directory=None):
     """
     Parse a list of CLI arguments used to name artifacts as name:path/to/artifact
     Download the relevant artifact from the targeted task and outputs
@@ -160,6 +166,8 @@ def load_named_artifacts(config, source_task_id, arguments):
 
         # Download the artifact to process it later locally
         artifact_task_id, artifact_name = matching_artifacts[0]
-        artifact_path = download_artifact(queue, artifact_task_id, artifact_name)
+        artifact_path = download_artifact(
+            queue, artifact_task_id, artifact_name, output_directory
+        )
 
         yield (name, artifact_name, artifact_path)
