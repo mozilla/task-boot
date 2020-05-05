@@ -1,20 +1,21 @@
 # syntax=docker/dockerfile:experimental
 FROM python:3.7-alpine
 
-ARG BUILD_DIR=/build
-
 # Add img
 RUN apk add --no-cache img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Setup other deps
 RUN apk add --no-cache git skopeo docker
 
-# Install taskboot from mounted source code
+# Define the working directory
+WORKDIR taskboot
+
+# Copy taskboot source directory on the image
+COPY . /src/taskboot
+
 # Use a dedicated build dir to avoid building in bind mount
-RUN --mount=type=bind,target=/src/taskboot \
-  cd /src/taskboot && \
-  mkdir -p ${BUILD_DIR} && \
-  pip install --no-cache-dir --build ${BUILD_DIR} . && \
-  rm -rf ${BUILD_DIR}
+RUN mkdir -p /build && \
+    pip install --no-cache-dir --build /build /src/taskboot && \
+    rm -rf /build
 
 CMD ["taskboot", "--help"]
