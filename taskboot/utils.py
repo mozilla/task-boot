@@ -5,6 +5,7 @@
 
 import logging
 import os
+import pathlib
 import tempfile
 import time
 from fnmatch import fnmatch
@@ -116,7 +117,7 @@ def download_artifact(queue, task_id, artifact_name, output_directory=None):
         _, path = tempfile.mkstemp(suffix="-taskboot{}".format(ext))
     else:
         # Download the artifact in a specific directory
-        path = output_directory / artifact_name
+        path = output_directory.absolute() / pathlib.Path(artifact_name).name
 
     retry(lambda: download_progress(url, path))
 
