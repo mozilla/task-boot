@@ -173,6 +173,7 @@ def main():
     download_artifacts.add_argument(
         "--artifacts",
         nargs="+",
+        type=str,
         help="the mapping of worker-type:artifact-path to download",
     )
     download_artifacts.set_defaults(func=retrieve_artifacts)
