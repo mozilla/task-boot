@@ -19,7 +19,6 @@ def retrieve_artifacts(target, args):
 
     # Load config from file/secret
     config = Configuration(args)
-    assert config.has_docker_auth(), "Missing Docker authentication"
 
     # Load dependencies artifacts
     for _, artifact_name, artifact_path in load_named_artifacts(
