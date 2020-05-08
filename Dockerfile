@@ -5,7 +5,7 @@ FROM python:3.7-alpine
 RUN apk add --no-cache img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Setup other deps
-RUN apk add --no-cache git skopeo docker
+RUN apk add --no-cache git skopeo docker zip
 
 # Define the working directory
 WORKDIR taskboot
