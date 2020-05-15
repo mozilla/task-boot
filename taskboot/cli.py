@@ -286,7 +286,14 @@ def main():
         default=os.environ.get("TASK_ID"),
         help="Taskcluster task group to analyse",
     )
-    github_release_cmd.add_argument(
+    group = github_release_cmd.add_mutually_exclusive_group()
+    group.add_argument(
+        "--local-asset",
+        nargs="+",
+        type=str,
+        help="Asset to upload on the release, retrieved from your image",
+    )
+    group.add_argument(
         "--asset",
         nargs="+",
         type=str,
