@@ -174,7 +174,7 @@ def main():
         "--artifacts",
         nargs="+",
         type=str,
-        help="the mapping of worker-type:artifact-path to download",
+        help="Paths to the artifacts to download on the task",
     )
     download_artifacts.set_defaults(func=retrieve_artifacts)
 
