@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import pathlib
 
 from taskboot.config import Configuration
 from taskboot.utils import load_named_artifacts
@@ -20,9 +21,15 @@ def retrieve_artifacts(target, args):
     # Load config from file/secret
     config = Configuration(args)
 
+    # Replace the path to the artifact with the load_named_version format
+    # worker-type:artifact path
+    artifacts = [
+        str(pathlib.Path(artifact).stem) + ":" + artifact for artifact in args.artifacts
+    ]
+
     # Load dependencies artifacts
     for _, artifact_name, artifact_path in load_named_artifacts(
-        config, args.task_id, args.artifacts, args.output_path
+        config, args.task_id, artifacts, args.output_path
     ):
         logger.info(f"{artifact_name} has been downloaded to {artifact_path}")
 
