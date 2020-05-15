@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import pathlib
 import re
 
 from github import Github
@@ -75,8 +76,21 @@ def github_release(target, args):
     config = Configuration(args)
     assert config.has_github_auth(), "Missing Github authentication"
 
-    # Check the assets before any Github change is applied
-    assets = list(load_named_artifacts(config, args.task_id, args.asset))
+    # Check if local or dependent task assets are used
+    if args.local_asset is None:
+        # Check the assets before any Github change is applied
+        assets = list(load_named_artifacts(config, args.task_id, args.asset))
+    else:
+        # Create a list of tuples structured in this way
+        # (name, artifact_name, artifact_path)
+        assets = [
+            (
+                str(pathlib.Path(artifact_path).stem),
+                artifact_path,
+                pathlib.Path(artifact_path),
+            )
+            for artifact_path in args.local_asset
+        ]
 
     # Setup GitHub API client and load repository
     github = Github(config.github["token"])
