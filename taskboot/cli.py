@@ -14,6 +14,7 @@ from taskboot.build import build_compose
 from taskboot.build import build_hook
 from taskboot.build import build_image
 from taskboot.cargo import cargo_publish
+from taskboot.git import git_push
 from taskboot.github import github_release
 from taskboot.push import heroku_release
 from taskboot.push import push_artifacts
@@ -268,6 +269,26 @@ def main():
         help="PyPi repository to use for publication",
     )
     deploy_pypi.set_defaults(func=publish_pypi)
+
+    # Push on a repository
+    git_push_cmd = commands.add_parser(
+        "git-push", help="Push the commits of a branch on a repository",
+    )
+    git_push_cmd.add_argument(
+        "--force-push", action="store_true", help="Force push the branch",
+    )
+    git_push_cmd.add_argument(
+        "repository",
+        type=str,
+        help="Repository name to use (example: mozilla/task-boot)",
+    )
+    git_push_cmd.add_argument(
+        "user", type=str, help="User login to use",
+    )
+    git_push_cmd.add_argument(
+        "branch", type=str, help="The name of the branch to use",
+    )
+    git_push_cmd.set_defaults(func=git_push)
 
     # Deploy as a github release
     github_release_cmd = commands.add_parser(
