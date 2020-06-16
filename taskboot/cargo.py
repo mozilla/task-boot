@@ -27,5 +27,6 @@ def cargo_publish(target, args):
     error = subprocess.run(
         ["cargo", "publish", "--token", config.cargo["token"]], capture_output=True
     )
+
     if error.returncode != 0:
         raise Exception(f"Failed to publish the crate")
