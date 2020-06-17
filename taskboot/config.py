@@ -87,3 +87,9 @@ class Configuration(object):
         if github is None:
             return False
         return "token" in github
+
+    def has_cargo_auth(self):
+        cargo = self.config.get("cargo")
+        if cargo is None:
+            return False
+        return "token" in cargo

@@ -13,6 +13,7 @@ from taskboot.aws import push_s3
 from taskboot.build import build_compose
 from taskboot.build import build_hook
 from taskboot.build import build_image
+from taskboot.cargo import cargo_publish
 from taskboot.github import github_release
 from taskboot.push import heroku_release
 from taskboot.push import push_artifacts
@@ -300,6 +301,12 @@ def main():
         help="Asset to upload on the release, retrieved from previously created artifacts. Format is asset-name:path/to/artifact",
     )
     github_release_cmd.set_defaults(func=github_release)
+
+    # Publish on crates.io
+    cargo_publish_cmd = commands.add_parser(
+        "cargo-publish", help="Publish a crate on crates.io"
+    )
+    cargo_publish_cmd.set_defaults(func=cargo_publish)
 
     # Always load the target
     args = parser.parse_args()
