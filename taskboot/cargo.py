@@ -21,10 +21,7 @@ def cargo_publish(target, args):
     assert config.has_cargo_auth(), "Missing Cargo authentication"
 
     # Build the package to publish on crates.io
-    try:
-        subprocess.run(["cargo", "publish", "--dry-run"], check=True)
-    except subprocess.CalledProcessError:
-        raise Exception("Failed to build the package to publish on crates.io")
+    subprocess.run(["cargo", "publish", "--dry-run"], check=True)
 
     # Publish the crate on crates.io
     # stdout and stderr are captured to avoid leaking the token
