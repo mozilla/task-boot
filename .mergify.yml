@@ -9,6 +9,7 @@ pull_request_rules:
     actions:
       merge:
         method: squash
+        strict: smart+fasttrack
 
   - name: Automatic merge on approval for contributors
     conditions:
@@ -19,3 +20,4 @@ pull_request_rules:
     actions:
       merge:
         method: squash
+        strict: smart+fasttrack
