@@ -82,11 +82,11 @@ class Configuration(object):
             return False
         return "username" in pypi and "password" in pypi
 
-    def has_github_auth(self):
-        github = self.config.get("github")
-        if github is None:
+    def has_git_auth(self):
+        git = self.config.get("git")
+        if git is None:
             return False
-        return "token" in github
+        return "token" in git
 
     def has_cargo_auth(self):
         cargo = self.config.get("cargo")
