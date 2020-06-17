@@ -74,7 +74,7 @@ def github_release(target, args):
 
     # Load config from file/secret
     config = Configuration(args)
-    assert config.has_github_auth(), "Missing Github authentication"
+    assert config.has_git_auth(), "Missing Github authentication"
 
     # Check if local or dependent task assets are used
     if args.local_asset is None:

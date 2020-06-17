@@ -18,7 +18,7 @@ def git_push(target, args):
 
     # Load config from file/secret
     config = Configuration(args)
-    assert config.has_github_auth(), "Missing GitHub authentication"
+    assert config.has_git_auth(), "Missing Git authentication"
 
     # Set remote repository
     repo_link = "https://{}:{}@{}.git".format(
