@@ -280,7 +280,7 @@ def main():
     git_push_cmd.add_argument(
         "repository",
         type=str,
-        help="Repository name to use (example: mozilla/task-boot)",
+        help="Repository name to use (example: github.com/mozilla/task-boot)",
     )
     git_push_cmd.add_argument(
         "user", type=str, help="User login to use",
