@@ -27,13 +27,9 @@ def git_push(target, args):
     subprocess.run(["git", "remote", "set-url", "origin", repo_link])
 
     # Push on repository
-    try:
-        if args.force_push:
-            command = ["git", "push", "-f", "origin", args.branch]
-        else:
-            command = ["git", "push", "origin", args.branch]
+    if args.force_push:
+        command = ["git", "push", "-f", "origin", args.branch]
+    else:
+        command = ["git", "push", "origin", args.branch]
 
-        subprocess.run(command, check=True)
-
-    except subprocess.CalledProcessError:
-        raise Exception(f"Pushing commits to {args.repository} failed")
+    subprocess.run(command, check=True)
