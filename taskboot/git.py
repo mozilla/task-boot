@@ -3,15 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import logging
 import subprocess
 
 from taskboot.config import Configuration
+from taskboot.target import Target
 
 logger = logging.getLogger(__name__)
 
 
-def git_push(target, args):
+def git_push(target: Target, args: argparse.Namespace) -> None:
     """
     Push commits on a repository
     """

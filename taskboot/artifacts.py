@@ -3,16 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import logging
 import pathlib
 
 from taskboot.config import Configuration
+from taskboot.target import Target
 from taskboot.utils import load_named_artifacts
 
 logger = logging.getLogger(__name__)
 
 
-def retrieve_artifacts(target, args):
+def retrieve_artifacts(target: Target, args: argparse.Namespace) -> None:
     """
     Retrieve all artifacts from a task
     """
