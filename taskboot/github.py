@@ -3,14 +3,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import logging
 import pathlib
 import re
+from typing import List
 
+from github import Commit
 from github import Github
+from github import GitRef
+from github import Repository
 from github import UnknownObjectException
 
 from taskboot.config import Configuration
+from taskboot.target import Target
 from taskboot.utils import load_named_artifacts
 
 logger = logging.getLogger(__name__)
@@ -18,7 +24,7 @@ logger = logging.getLogger(__name__)
 RELEASE_MESSAGE_REGEX = re.compile(r"^(release|version|bump to) ([\w\-_\.]+)$")
 
 
-def is_release_commit(commit, tags):
+def is_release_commit(commit: Commit.Commit, tags: List[str]) -> bool:
     """
     Check if the github commit is a known tag and has a release message like:
     - Release XXX
@@ -39,7 +45,7 @@ def is_release_commit(commit, tags):
     return False
 
 
-def build_release_notes(repository, tag):
+def build_release_notes(repository: Repository.Repository, tag: GitRef.GitRef) -> str:
     signature = (
         "\n---\nReleased with [mozilla/task-boot](https://github.com/mozilla/task-boot)"
     )
@@ -66,7 +72,7 @@ def build_release_notes(repository, tag):
     return "\n".join(lines) + signature
 
 
-def github_release(target, args):
+def github_release(target: Target, args: argparse.Namespace) -> None:
     """
     Push all artifacts from dependent tasks
     """
