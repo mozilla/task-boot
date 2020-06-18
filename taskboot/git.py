@@ -24,7 +24,7 @@ def git_push(target: Target, args: argparse.Namespace) -> None:
 
     # Set remote repository
     repo_link = "https://{}:{}@{}.git".format(
-        args.user, config.github["token"], args.repository
+        args.user, config.git["token"], args.repository
     )
     subprocess.run(["git", "remote", "set-url", "origin", repo_link])
 
