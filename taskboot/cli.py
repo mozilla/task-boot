@@ -24,11 +24,11 @@ from taskboot.target import Target
 logging.basicConfig(level=logging.INFO)
 
 
-def usage(target, args):
+def usage(target: Target, args: argparse.Namespace) -> None:
     print("Here is how to use taskboot...")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(prog="taskboot")
     parser.add_argument(
         "--config", type=open, help="Path to local configuration/secrets file"

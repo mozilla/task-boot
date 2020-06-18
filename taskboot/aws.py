@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import logging
 import mimetypes
 
@@ -11,13 +12,14 @@ import botocore.exceptions
 import taskcluster
 
 from taskboot.config import Configuration
+from taskboot.target import Target
 from taskboot.utils import download_artifact
 from taskboot.utils import load_artifacts
 
 logger = logging.getLogger(__name__)
 
 
-def push_s3(target, args):
+def push_s3(target: Target, args: argparse.Namespace) -> None:
     """
     Push files from a remote task on an AWS S3 bucket
     """
