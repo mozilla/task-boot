@@ -99,7 +99,7 @@ def github_release(target: Target, args: argparse.Namespace) -> None:
         ]
 
     # Setup GitHub API client and load repository
-    github = Github(config.github["token"])
+    github = Github(config.git["token"])
     try:
         repository = github.get_repo(args.repository)
         logger.info(f"Loaded Github repository {repository.full_name} #{repository.id}")
