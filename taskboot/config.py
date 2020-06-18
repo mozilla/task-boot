@@ -5,6 +5,8 @@
 
 import logging
 import os
+from typing import Any
+from typing import Dict
 
 import taskcluster
 import yaml
@@ -15,7 +17,7 @@ TASKCLUSTER_DEFAULT_URL = "https://taskcluster.net"
 
 
 class Configuration(object):
-    config = {}
+    config: Dict[str, Any] = {}
 
     def __init__(self, args):
         if args.secret:
