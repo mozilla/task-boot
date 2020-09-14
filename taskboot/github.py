@@ -57,7 +57,7 @@ def build_release_notes(repository: Repository.Repository, tag: GitRef.GitRef) -
         commits = diff.commits
     except UnknownObjectException:
         logger.info("No previous release available, will use all commits on repo")
-        commits = repository.get_commits()
+        commits = [commit for commit in repository.get_commits()]
 
     # List existing tags sha
     tags = [tag.commit.sha for tag in repository.get_tags()]
