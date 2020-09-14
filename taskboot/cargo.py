@@ -28,7 +28,8 @@ def cargo_publish(target: Target, args: argparse.Namespace) -> None:
     # Publish the crate on crates.io
     # stdout and stderr are captured to avoid leaking the token
     proc = subprocess.run(
-        ["cargo", "publish", "--token", config.cargo["token"]], capture_output=True,
+        ["cargo", "publish", "--token", config.cargo["token"]],
+        capture_output=True,
     )
 
     if proc.returncode != 0:

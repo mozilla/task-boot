@@ -159,7 +159,8 @@ def main() -> None:
 
     # Download all artifacts from a specific task
     download_artifacts = commands.add_parser(
-        "retrieve-artifact", help="Download all artifacts from a specific task",
+        "retrieve-artifact",
+        help="Download all artifacts from a specific task",
     )
     download_artifacts.add_argument(
         "--task-id",
@@ -272,10 +273,13 @@ def main() -> None:
 
     # Push on a repository
     git_push_cmd = commands.add_parser(
-        "git-push", help="Push the commits of a branch on a repository",
+        "git-push",
+        help="Push the commits of a branch on a repository",
     )
     git_push_cmd.add_argument(
-        "--force-push", action="store_true", help="Force push the branch",
+        "--force-push",
+        action="store_true",
+        help="Force push the branch",
     )
     git_push_cmd.add_argument(
         "repository",
@@ -283,10 +287,14 @@ def main() -> None:
         help="Repository name to use (example: github.com/mozilla/task-boot)",
     )
     git_push_cmd.add_argument(
-        "user", type=str, help="User login to use",
+        "user",
+        type=str,
+        help="User login to use",
     )
     git_push_cmd.add_argument(
-        "branch", type=str, help="The name of the branch to use",
+        "branch",
+        type=str,
+        help="The name of the branch to use",
     )
     git_push_cmd.set_defaults(func=git_push)
 
@@ -300,7 +308,9 @@ def main() -> None:
         help="Github repository name to use (example: mozilla/task-boot)",
     )
     github_release_cmd.add_argument(
-        "version", type=str, help="Release version tag to create or update on github",
+        "version",
+        type=str,
+        help="Release version tag to create or update on github",
     )
     github_release_cmd.add_argument(
         "--task-id",
