@@ -194,7 +194,7 @@ def main() -> None:
     artifacts.add_argument(
         "--artifact-filter",
         type=str,
-        default="public/**.tar",
+        default="public/**.tar.zst",
         help="Filter applied to artifacts paths, supports fnmatch syntax.",
     )
     artifacts.add_argument(
