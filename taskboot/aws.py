@@ -6,6 +6,7 @@
 import argparse
 import logging
 import mimetypes
+from datetime import datetime
 
 import boto3
 import botocore.exceptions
@@ -76,3 +77,26 @@ def push_s3(target: Target, args: argparse.Namespace) -> None:
             ContentType=content_type,
         )
         logger.info("Uploaded {} as {} on S3".format(s3_path, content_type))
+
+    cloudfront_distribution_id = config.aws.get("cloudfront_distribution_id")
+    if cloudfront_distribution_id is not None:
+        cloudfront_client = boto3.client(
+            "cloudfront",
+            aws_access_key_id=config.aws["access_key_id"],
+            aws_secret_access_key=config.aws["secret_access_key"],
+        )
+
+        cloudfront_client.create_invalidation(
+            DistributionId=cloudfront_distribution_id,
+            InvalidationBatch={
+                "Paths": {
+                    "Quantity": 1,
+                    "Items": [
+                        "/*",
+                    ],
+                },
+                "CallerReference": str(int(datetime.utcnow().timestamp())),
+            },
+        )
+
+        logger.info("Cloudfront invalidation created")
