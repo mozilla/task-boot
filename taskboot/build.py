@@ -18,6 +18,7 @@ from taskboot.docker import Docker
 from taskboot.docker import Img
 from taskboot.docker import patch_dockerfile
 from taskboot.utils import retry
+from taskboot.utils import zstd_compress
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ def build_image(target, args):
     # Write the produced image
     if output:
         build_tool.save(tags, output)
+        zstd_compress(output)
 
     # Push the produced image
     if args.push:
@@ -167,7 +169,11 @@ def build_compose(target, args):
 
         # Write the produced image
         if output:
-            build_tool.save(tags, os.path.join(output, "{}.tar".format(name)))
+            output_path = os.path.join(output, f"{name}.tar")
+
+            build_tool.save(tags, output_path)
+
+            zstd_compress(output_path)
 
     logger.info("Compose file fully processed.")
 

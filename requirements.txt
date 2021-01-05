@@ -8,3 +8,4 @@ taskcluster==38.0.4
 taskcluster-urls==13.0.1
 twine==2.0.0
 yarl<1.4.0
+zstandard==0.15.1

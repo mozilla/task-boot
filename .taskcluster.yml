@@ -79,9 +79,9 @@ tasks:
             pip install --no-cache-dir --quiet . &&
             taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
         artifacts:
-          public/taskboot/image.tar:
+          public/taskboot/image.tar.zst:
             expires: {$fromNow: '2 weeks'}
-            path: /image.tar
+            path: /image.tar.zst
             type: file
       scopes:
         - docker-worker:capability:privileged
@@ -102,7 +102,7 @@ tasks:
         features:
           dind: true
         maxRunTime: 3600
-        image: python:3.7-alpine
+        image: python:3.7
         env:
           IMAGE: mozilla/taskboot
           REGISTRY: registry.hub.docker.com
@@ -110,14 +110,13 @@ tasks:
         command:
           - sh
           - -lxce
-          - "apk add --no-cache git --quiet &&
-            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+          - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet . &&
             taskboot --target=/src build --build-tool=dind --image=$IMAGE --tag=$VERSION --write /image.tar tests/dockerfile.empty"
         artifacts:
-          public/taskboot/test-dind.tar:
+          public/taskboot/test-dind.tar.zst:
             expires: {$fromNow: '2 weeks'}
-            path: /image.tar
+            path: /image.tar.zst
             type: file
       metadata:
         name: TaskBoot docker build using Docker in Docker
@@ -138,7 +137,7 @@ tasks:
         maxRunTime: 3600
         image:
           type: task-image
-          path: public/taskboot/test-dind.tar
+          path: public/taskboot/test-dind.tar.zst
           taskId: {$eval: as_slugid("docker_build_dind")}
       metadata:
         name: TaskBoot docker run DinD image

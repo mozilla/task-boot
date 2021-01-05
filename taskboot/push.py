@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import os
 
 import requests
 import taskcluster
@@ -15,6 +16,7 @@ from taskboot.docker import docker_id_archive
 from taskboot.utils import download_artifact
 from taskboot.utils import load_artifacts
 from taskboot.utils import load_named_artifacts
+from taskboot.utils import zstd_decompress
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +64,9 @@ def push_artifact(queue, push_tool, task_id, artifact_name, custom_tag=None):
     and push it on remote repo
     """
     path = download_artifact(queue, task_id, artifact_name)
+    path, ext = os.path.splitext(path)
+    assert ext == "zst"
+    zstd_decompress(path)
     push_tool.push_archive(path, custom_tag)
 
 
@@ -90,6 +95,10 @@ def heroku_release(target, args):
 
         # Push the Docker image
         custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_name}"
+
+        artifact_path, ext = os.path.splitext(artifact_path)
+        assert ext == "zst"
+        zstd_decompress(artifact_path)
 
         skopeo.push_archive(artifact_path, custom_tag_name)
 

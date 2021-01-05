@@ -12,6 +12,7 @@ from fnmatch import fnmatch
 
 import requests
 import taskcluster
+import zstandard
 
 logger = logging.getLogger(__name__)
 
@@ -172,3 +173,21 @@ def load_named_artifacts(config, source_task_id, arguments, output_directory=Non
         )
 
         yield (name, artifact_name, artifact_path)
+
+
+def zstd_compress(path: str) -> None:
+    cctx = zstandard.ZstdCompressor(threads=-1)
+    with open(path, "rb") as input_f:
+        with open(f"{path}.zst", "wb") as output_f:
+            cctx.copy_stream(input_f, output_f)
+
+    os.remove(path)
+
+
+def zstd_decompress(path: str) -> None:
+    dctx = zstandard.ZstdDecompressor()
+    with open(f"{path}.zst", "rb") as input_f:
+        with open(path, "wb") as output_f:
+            dctx.copy_stream(input_f, output_f)
+
+    os.remove(f"{path}.zst")
