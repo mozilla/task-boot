@@ -165,7 +165,9 @@ tasks:
           command:
             - sh
             - -lxce
-            - "apt-get -qq update && apt-get -qq install -y skopeo &&
+            - "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list &&
+              curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/Release.key | apt-key add - &&
+              apt-get -qq update && apt-get -qq install -y skopeo &&
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
               pip install --no-cache-dir --quiet . &&
               taskboot push-artifact"
