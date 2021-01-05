@@ -65,7 +65,7 @@ def push_artifact(queue, push_tool, task_id, artifact_name, custom_tag=None):
     """
     path = download_artifact(queue, task_id, artifact_name)
     path, ext = os.path.splitext(path)
-    assert ext == "zst"
+    assert ext == ".zst"
     zstd_decompress(path)
     push_tool.push_archive(path, custom_tag)
 
@@ -97,7 +97,7 @@ def heroku_release(target, args):
         custom_tag_name = f"{HEROKU_REGISTRY}/{args.heroku_app}/{heroku_dyno_name}"
 
         artifact_path, ext = os.path.splitext(artifact_path)
-        assert ext == "zst"
+        assert ext == ".zst"
         zstd_decompress(artifact_path)
 
         skopeo.push_archive(artifact_path, custom_tag_name)
