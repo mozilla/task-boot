@@ -159,13 +159,13 @@ tasks:
             # Needed for access to secret
             taskclusterProxy: true
           maxRunTime: 3600
-          image: python:3.7-alpine
+          image: python:3.7
           env:
             TASKCLUSTER_SECRET: project/relman/taskboot/deploy
           command:
             - sh
             - -lxce
-            - "apk add --no-cache git skopeo --quiet &&
+            - "apt-get -qq update && apt-get -qq install -y skopeo &&
               git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
               pip install --no-cache-dir --quiet . &&
               taskboot push-artifact"
