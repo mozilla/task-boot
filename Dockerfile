@@ -5,7 +5,7 @@ FROM python:3.7-alpine
 RUN apk add --no-cache img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Setup other deps
-RUN apk add --no-cache git skopeo docker ca-certificates gcc
+RUN apk add --no-cache git skopeo docker ca-certificates gcc g++
 
 # Rust environment variables
 ENV RUSTUP_HOME=/usr/local/rustup \
