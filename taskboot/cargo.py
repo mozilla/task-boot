@@ -23,12 +23,12 @@ def cargo_publish(target: Target, args: argparse.Namespace) -> None:
     assert config.has_cargo_auth(), "Missing Cargo authentication"
 
     # Build the package to publish on crates.io
-    subprocess.run(["cargo", "publish", "--dry-run"], check=True)
+    subprocess.run(["cargo", "publish", "--no-verify", "--dry-run"], check=True)
 
     # Publish the crate on crates.io
     # stdout and stderr are captured to avoid leaking the token
     proc = subprocess.run(
-        ["cargo", "publish", "--token", config.cargo["token"]],
+        ["cargo", "publish", "--no-verify", "--token", config.cargo["token"]],
         capture_output=True,
     )
 
