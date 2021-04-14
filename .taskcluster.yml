@@ -66,15 +66,17 @@ tasks:
         capabilities:
           privileged: true
         maxRunTime: 3600
-        image: python:3.7-alpine
+        image: python:3.7
         env:
           IMAGE: mozilla/taskboot
           REGISTRY: registry.hub.docker.com
           VERSION: "${tag}"
+          IMG_SHA256: cc9bf08794353ef57b400d32cd1065765253166b0a09fba360d927cfbd158088
         command:
           - sh
           - -lxce
-          - "apk add --no-cache git img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing --quiet &&
+          - "curl -fSL \"https://github.com/genuinetools/img/releases/download/v0.5.11/img-linux-amd64\" -o \"/usr/local/bin/img\" &&
+            echo \"$IMG_SHA256  /usr/local/bin/img\" | sha256sum -c - && chmod a+x \"/usr/local/bin/img\" &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet . &&
             taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
