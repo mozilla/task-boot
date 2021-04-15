@@ -30,7 +30,13 @@ def cargo_publish(target: Target, args: argparse.Namespace) -> None:
     proc = subprocess.run(
         ["cargo", "publish", "--no-verify", "--token", config.cargo["token"]],
         capture_output=True,
+        text=True,  # Return stdout and stderr output as strings
     )
 
-    if proc.returncode != 0:
+    # If an error is occurred while publishing the crate
+    # Do not fail when a `crate already uploaded` error is found and
+    # the option to ignore that kind of error is enabled
+    if proc.returncode != 0 and not (
+        args.ignore_published and "is already uploaded" in proc.stderr
+    ):
         raise Exception("Failed to publish the crate on crates.io")

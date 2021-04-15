@@ -337,6 +337,11 @@ def main() -> None:
     cargo_publish_cmd = commands.add_parser(
         "cargo-publish", help="Publish a crate on crates.io"
     )
+    cargo_publish_cmd.add_argument(
+        "--ignore-published",
+        action="store_true",
+        help="Do not fail if a crate is already published on crates.io",
+    )
     cargo_publish_cmd.set_defaults(func=cargo_publish)
 
     # Always load the target
