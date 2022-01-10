@@ -115,7 +115,7 @@ def build_compose(target, args):
     composefile = target.check_path(args.composefile)
 
     # Check compose file has version >= 3.0
-    compose = yaml.load(open(composefile))
+    compose = yaml.load(open(composefile), Loader=yaml.SafeLoader)
     version = compose.get("version")
     assert version is not None, "Missing version in {}".format(composefile)
     assert compose["version"].startswith(
