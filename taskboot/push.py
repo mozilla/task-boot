@@ -11,6 +11,7 @@ import taskcluster
 
 from taskboot.config import Configuration
 from taskboot.docker import Docker
+from taskboot.docker import Podman
 from taskboot.docker import Skopeo
 from taskboot.docker import docker_id_archive
 from taskboot.utils import download_artifact
@@ -37,6 +38,8 @@ def push_artifacts(target, args):
         push_tool = Skopeo()
     elif args.push_tool == "docker":
         push_tool = Docker()
+    elif args.push_tool == "podman":
+        push_tool = Podman()
     else:
         raise ValueError("Not  supported push tool: {}".format(args.push_tool))
 

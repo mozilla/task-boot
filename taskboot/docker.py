@@ -397,6 +397,26 @@ class DinD(Tool):
         raise NotImplementedError("Cannot push using dind")
 
 
+class Podman(Docker):
+    """
+    Interface to the podman tool, replacing docker daemon
+    """
+
+    def __init__(self):
+        Tool.__init__(self, "podman")
+
+    def list_images(self):
+        """
+        List images stored in current state
+        Parses the text output into usable dicts
+        """
+        result = super().list_images()
+        for image in result:
+            if image["digest"].startswith("sha256:"):
+                image["digest"] = image["digest"][7:]
+        return result
+
+
 class Skopeo(Tool):
     """
     Interface to the skopeo tool, used to copy local images to remote repositories

@@ -100,7 +100,7 @@ def main() -> None:
     build.add_argument(
         "--build-tool",
         dest="build_tool",
-        choices=["img", "docker", "dind"],
+        choices=["img", "docker", "dind", "podman"],
         default=os.environ.get("BUILD_TOOL") or "img",
         help="Tool to build docker images.",
     )
@@ -205,7 +205,7 @@ def main() -> None:
     artifacts.add_argument(
         "--push-tool",
         dest="push_tool",
-        choices=["skopeo", "docker"],
+        choices=["skopeo", "docker", "podman"],
         default=os.environ.get("PUSH_TOOL") or "skopeo",
         help="Tool to push docker images.",
     )
