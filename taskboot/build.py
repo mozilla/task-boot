@@ -16,6 +16,7 @@ from taskboot.config import Configuration
 from taskboot.docker import DinD
 from taskboot.docker import Docker
 from taskboot.docker import Img
+from taskboot.docker import Podman
 from taskboot.docker import patch_dockerfile
 from taskboot.utils import retry
 from taskboot.utils import zstd_compress
@@ -55,6 +56,8 @@ def build_image(target, args):
         build_tool = Img(cache=args.cache)
     elif args.build_tool == "docker":
         build_tool = Docker()
+    elif args.build_tool == "podman":
+        build_tool = Podman()
     elif args.build_tool == "dind":
         build_tool = DinD()
     else:

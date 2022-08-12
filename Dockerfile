@@ -5,7 +5,8 @@ FROM python:3.10-alpine
 RUN apk add --no-cache img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Setup other deps
-RUN apk add --no-cache git skopeo docker cargo
+RUN apk add --no-cache git skopeo docker cargo podman cni-plugins fuse-overlayfs \
+    && sed -i 's/^#mount_program/mount_program/' /etc/containers/storage.conf
 
 # Define the working directory
 WORKDIR taskboot
