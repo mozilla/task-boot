@@ -13,9 +13,6 @@ WORKDIR taskboot
 # Copy taskboot source directory on the image
 COPY . /src/taskboot
 
-# Use a dedicated build dir to avoid building in bind mount
-RUN mkdir -p /build && \
-    pip install --no-cache-dir --build /build /src/taskboot && \
-    rm -rf /build
+RUN pip install --no-cache-dir /src/taskboot
 
 CMD ["taskboot", "--help"]
