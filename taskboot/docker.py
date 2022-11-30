@@ -462,7 +462,7 @@ class Skopeo(Tool):
                 "copy",
                 "--authfile",
                 self.auth_file,
-                "oci-archive:{}".format(path),
+                "docker-archive:{}".format(path),
                 "docker://{}".format(tag),
             ]
             self.run(cmd)
