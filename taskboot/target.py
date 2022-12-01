@@ -40,6 +40,21 @@ class Target(object):
         subprocess.check_output(cmd)
         logger.info("Cloned into {}".format(self.dir))
 
+        # Explicitly fetch revision if it isn't present
+        # This is necessary when revision is from a fork
+        # and repository is the base repo.
+        if (
+            subprocess.run(
+                ["git", "show", revision],
+                cwd=self.dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).returncode
+            != 0
+        ):
+            cmd = ["git", "fetch", "--quiet", "origin", revision]
+            subprocess.check_output(cmd, cwd=self.dir)
+
         # Checkout revision to pull modifications
         cmd = ["git", "checkout", revision, "-b", "taskboot"]
         subprocess.check_output(cmd, cwd=self.dir)
