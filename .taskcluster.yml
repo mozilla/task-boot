@@ -120,6 +120,8 @@ tasks:
             expires: {$fromNow: '2 weeks'}
             path: /image.tar.zst
             type: file
+      scopes:
+        - docker-worker:capability:privileged
       metadata:
         name: TaskBoot docker build using Docker in Docker
         description: Taskcluster boot utilities - build a test image
