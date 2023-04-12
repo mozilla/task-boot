@@ -17,7 +17,6 @@ class Target(object):
     """
 
     def __init__(self, args):
-
         # Setup workspace in a tempdir
         if args.target:
             self.dir = os.path.realpath(args.target)

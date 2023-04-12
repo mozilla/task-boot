@@ -87,7 +87,6 @@ def load_artifacts(task_id, queue, artifact_filter, exclude_filter=None):
         for artifact in task_artifacts["artifacts"]:
             artifact_name = artifact["name"]
             if fnmatch(artifact_name, artifact_filter):
-
                 if exclude_filter and fnmatch(artifact_name, exclude_filter):
                     logger.info(
                         "Excluding artifact %s because of exclude filter",

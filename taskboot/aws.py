@@ -56,7 +56,6 @@ def push_s3(target: Target, args: argparse.Namespace) -> None:
     # from their final path
     artifacts = load_artifacts(args.task_id, queue, "{}/*".format(args.artifact_folder))
     for task_id, artifact_name in artifacts:
-
         # Download each artifact
         assert artifact_name.startswith(args.artifact_folder)
         local_path = download_artifact(queue, task_id, artifact_name)
