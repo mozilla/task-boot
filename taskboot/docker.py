@@ -31,7 +31,7 @@ IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
 
 # Taskcluster uses a really outdated version of Docker daemon API
 # so we need to use a *really* outdated client too
-TASKCLUSTER_DIND_API_VERSION = "1.18"
+TASKCLUSTER_DIND_API_VERSION = "1.41"
 
 
 def read_archive_tags(path):
