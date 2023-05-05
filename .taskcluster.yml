@@ -93,54 +93,55 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
-    - taskId: {$eval: as_slugid("docker_build_dind")}
+    - taskId: {$eval: as_slugid("docker_build_podman")}
       dependencies:
         - {$eval: as_slugid("code_checks")}
       provisionerId: proj-relman
-      workerType: ci
+      workerType: generic-worker-ubuntu-22-04
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
-        features:
-          dind: true
         maxRunTime: 3600
-        image: python:3.10
         env:
           IMAGE: mozilla/taskboot
           REGISTRY: registry.hub.docker.com
           VERSION: "${tag}"
         command:
-          - sh
-          - -lxce
-          - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --no-cache-dir --quiet . &&
-            taskboot --target=/src build --build-tool=dind --image=$IMAGE --tag=$VERSION --write /image.tar tests/dockerfile.empty"
+          - - sh
+            - '-lxce'
+            - |
+              wget https://bootstrap.pypa.io/get-pip.py
+              python3 get-pip.py --user
+              export PATH=$${HOME}/.local/bin:$${PATH}
+              git clone --quiet ${repository} src
+              cd src
+              git checkout ${head_rev} -b taskboot
+              python3 -m pip install --no-cache-dir --quiet --user .
+              taskboot --target=. build --build-tool=podman --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
         artifacts:
-          public/taskboot/test-dind.tar.zst:
+          - name: public/taskboot/test-dind.tar.zst
             expires: {$fromNow: '2 weeks'}
-            path: /image.tar.zst
+            path: image.tar.zst
             type: file
       metadata:
-        name: TaskBoot docker build using Docker in Docker
+        name: TaskBoot docker build using podman
         description: Taskcluster boot utilities - build a test image
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
     - taskId: {$eval: as_slugid("docker_run_dind")}
       dependencies:
-        - {$eval: as_slugid("docker_build_dind")}
+        - {$eval: as_slugid("docker_build_podman")}
       provisionerId: proj-relman
       workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
-        features:
-          dind: true
         maxRunTime: 3600
         image:
           type: task-image
           path: public/taskboot/test-dind.tar.zst
-          taskId: {$eval: as_slugid("docker_build_dind")}
+          taskId: {$eval: as_slugid("docker_build_podman")}
       metadata:
         name: TaskBoot docker run DinD image
         description: Taskcluster boot utilities - run a test image
