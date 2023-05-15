@@ -2,7 +2,7 @@ boto3>=1.9
 https://github.com/docker/docker-py/archive/1.10.6.tar.gz#egg=docker-py
 dockerfile-parse==2.0.0
 multidict==6.0.4
-PyGithub==1.58.1
+PyGithub==1.58.2
 pyyaml==6.0
 taskcluster==49.2.0
 taskcluster-urls==13.0.1
