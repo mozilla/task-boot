@@ -459,6 +459,7 @@ class Skopeo(Tool):
 
             logger.info("Pushing image as {}".format(tag))
             cmd = [
+                "--debug",
                 "copy",
                 "--authfile",
                 self.auth_file,
