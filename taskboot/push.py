@@ -86,9 +86,19 @@ def heroku_release(target, args):
         "username" in config.heroku and "password" in config.heroku
     ), "Missing Heroku authentication"
 
-    # Setup skopeo
-    skopeo = Skopeo()
-    skopeo.login(HEROKU_REGISTRY, config.heroku["username"], config.heroku["password"])
+    # Setup push tool
+    if args.push_tool == "skopeo":
+        push_tool = Skopeo()
+    elif args.push_tool == "docker":
+        push_tool = Docker()
+    elif args.push_tool == "podman":
+        push_tool = Podman()
+    else:
+        raise ValueError("Not supported push tool: {}".format(args.push_tool))
+
+    push_tool.login(
+        HEROKU_REGISTRY, config.heroku["username"], config.heroku["password"]
+    )
 
     updates_payload = []
 
@@ -102,7 +112,7 @@ def heroku_release(target, args):
         assert ext == ".zst"
         zstd_decompress(artifact_path)
 
-        skopeo.push_archive(artifact_path, custom_tag_name)
+        push_tool.push_archive(artifact_path, custom_tag_name)
 
         # Get the Docker image id
         image_id = docker_id_archive(artifact_path)

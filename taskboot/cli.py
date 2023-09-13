@@ -232,6 +232,13 @@ def main() -> None:
         help="Taskcluster task group to analyse",
     )
     deploy_heroku.add_argument("--heroku-app", type=str, required=True)
+    artifacts.add_argument(
+        "--push-tool",
+        dest="push_tool",
+        choices=["skopeo", "docker", "podman"],
+        default=os.environ.get("PUSH_TOOL") or "skopeo",
+        help="Tool to push docker images.",
+    )
     deploy_heroku.add_argument(
         "artifacts",
         nargs="+",
