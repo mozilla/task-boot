@@ -179,15 +179,11 @@ def zstd_compress(path: str) -> None:
     if not os.path.exists(path):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
-    subprocess.run(["zstd", "-f", path], check=True)
-
-    os.remove(path)
+    subprocess.run(["zstd", "--rm", "-f", path], check=True)
 
 
 def zstd_decompress(path: str) -> None:
     if not os.path.exists(f"{path}.zst"):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
-    subprocess.run(["zstd", "-df", f"{path}.zst"], check=True)
-
-    os.remove(f"{path}.zst")
+    subprocess.run(["zstd", "--rm", "-df", f"{path}.zst"], check=True)
