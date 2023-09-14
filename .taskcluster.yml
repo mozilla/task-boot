@@ -119,7 +119,7 @@ tasks:
               python3 -m pip install --no-cache-dir --quiet --user .
               taskboot --target=. build --build-tool=podman --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
         artifacts:
-          - name: public/taskboot/test-dind.tar.zst
+          - name: public/taskboot/test-podman.tar.zst
             expires: {$fromNow: '2 weeks'}
             path: image.tar.zst
             type: file
@@ -129,7 +129,7 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
-    - taskId: {$eval: as_slugid("docker_run_dind")}
+    - taskId: {$eval: as_slugid("docker_run_podman")}
       dependencies:
         - {$eval: as_slugid("docker_build_podman")}
       provisionerId: proj-relman
@@ -140,10 +140,10 @@ tasks:
         maxRunTime: 3600
         image:
           type: task-image
-          path: public/taskboot/test-dind.tar.zst
+          path: public/taskboot/test-podman.tar.zst
           taskId: {$eval: as_slugid("docker_build_podman")}
       metadata:
-        name: TaskBoot docker run DinD image
+        name: TaskBoot docker run podman image
         description: Taskcluster boot utilities - run a test image
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
