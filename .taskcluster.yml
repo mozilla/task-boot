@@ -75,7 +75,9 @@ tasks:
         command:
           - sh
           - -lxce
-          - "curl -fSL \"https://github.com/genuinetools/img/releases/download/v0.5.11/img-linux-amd64\" -o \"/usr/local/bin/img\" &&
+          - "apt-get -qq update &&
+            apt-get -qq install -y zstd &&
+            curl -fSL \"https://github.com/genuinetools/img/releases/download/v0.5.11/img-linux-amd64\" -o \"/usr/local/bin/img\" &&
             echo \"$IMG_SHA256  /usr/local/bin/img\" | sha256sum -c - && chmod a+x \"/usr/local/bin/img\" &&
             git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
             pip install --no-cache-dir --quiet . &&

@@ -3,16 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import errno
 import logging
 import os
 import pathlib
+import subprocess
 import tempfile
 import time
 from fnmatch import fnmatch
 
 import requests
 import taskcluster
-import zstandard
 
 logger = logging.getLogger(__name__)
 
@@ -175,18 +176,18 @@ def load_named_artifacts(config, source_task_id, arguments, output_directory=Non
 
 
 def zstd_compress(path: str) -> None:
-    cctx = zstandard.ZstdCompressor(threads=-1)
-    with open(path, "rb") as input_f:
-        with open(f"{path}.zst", "wb") as output_f:
-            cctx.copy_stream(input_f, output_f)
+    if not os.path.exists(path):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+
+    subprocess.run(["zstd", "-f", path], check=True)
 
     os.remove(path)
 
 
 def zstd_decompress(path: str) -> None:
-    dctx = zstandard.ZstdDecompressor()
-    with open(f"{path}.zst", "rb") as input_f:
-        with open(path, "wb") as output_f:
-            dctx.copy_stream(input_f, output_f)
+    if not os.path.exists(f"{path}.zst"):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+
+    subprocess.run(["zstd", "-df", f"{path}.zst"], check=True)
 
     os.remove(f"{path}.zst")
