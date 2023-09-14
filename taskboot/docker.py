@@ -458,29 +458,15 @@ class Skopeo(Tool):
             ), "Invalid tag {} : must use registry {}".format(tag, self.registry)
 
             logger.info("Pushing image as {}".format(tag))
-
-            tmp_dir = tempfile.mkdtemp("push")
-
             cmd = [
                 "--debug",
                 "copy",
                 "--authfile",
                 self.auth_file,
                 "docker-archive:{}".format(path),
-                "dir:{}".format(tmp_dir),
-            ]
-            self.run(cmd)
-
-            cmd = [
-                "--debug",
-                "copy",
-                "--authfile",
-                self.auth_file,
-                "dir:{}".format(tmp_dir),
                 "docker://{}".format(tag),
             ]
             self.run(cmd)
-
             logger.info("Push successful")
 
 
