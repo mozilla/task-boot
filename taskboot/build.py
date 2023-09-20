@@ -15,7 +15,6 @@ import yaml
 from taskboot.config import Configuration
 from taskboot.docker import DinD
 from taskboot.docker import Docker
-from taskboot.docker import Img
 from taskboot.docker import Podman
 from taskboot.docker import patch_dockerfile
 from taskboot.utils import retry
@@ -52,9 +51,7 @@ def build_image(target, args):
     """
     Build a docker image and allow save/push
     """
-    if args.build_tool == "img":
-        build_tool = Img(cache=args.cache)
-    elif args.build_tool == "docker":
+    if args.build_tool == "docker":
         build_tool = Docker()
     elif args.build_tool == "podman":
         build_tool = Podman()
@@ -112,7 +109,7 @@ def build_compose(target, args):
     Read a compose file and build each image described as buildable
     """
     assert args.build_retries > 0, "Build retries must be a positive integer"
-    build_tool = Img(cache=args.cache)
+    build_tool = Podman(cache=args.cache)
 
     # Check the dockerfile is available in target
     composefile = target.check_path(args.composefile)

@@ -22,11 +22,6 @@ from dockerfile_parse import DockerfileParser
 
 logger = logging.getLogger(__name__)
 
-# docker.io/mozilla/taskboot:latest  172.3MiB  25 hours ago  About an hour ago  sha256:e339e39884d2a6f44b493e8f135e5275d0e47209b3f990b768228534944db6e7
-IMG_LS_REGEX = re.compile(
-    r"([\w\.]+)/(([\w\-_\.]+)/([\w\-_\.]+)):([\w\-_\.]+)\t+([\.\w]+)\t+([\w ]+)\t+([\w ]+)\t+sha256:(\w{64})"
-)
-
 IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
 
 # Taskcluster uses a really outdated version of Docker daemon API
@@ -189,103 +184,6 @@ class Docker(Tool):
             logger.info("Pushing image as {}".format(tag))
             self.push(tag)
             logger.info("Push successful")
-
-
-class Img(Tool):
-    """
-    Interface to the img tool, replacing docker daemon
-    """
-
-    def __init__(self, cache=None):
-        super().__init__("img")
-
-        # Setup img state, using or creating a cache folder
-        if cache is not None:
-            self.state = os.path.join(os.path.realpath(cache), "img")
-            os.makedirs(self.state, exist_ok=True)
-        else:
-            self.state = tempfile.mkdtemp("-img")
-        logger.info("Docker state is using {}".format(self.state))
-
-    def login(self, registry, username, password):
-        """
-        Login on remote registry
-        """
-        cmd = [
-            "login",
-            "--state",
-            self.state,
-            "--password-stdin",
-            "-u",
-            username,
-            registry,
-        ]
-        self.run(cmd, input=password.encode("utf-8"))
-        logger.info("Authenticated on {} as {}".format(registry, username))
-
-    def list_images(self):
-        """
-        List images stored in current state
-        Parses the text output into usable dicts
-        """
-        ls = self.run(["ls", "--state", self.state], stdout=subprocess.PIPE)
-        out = []
-        for line in ls.stdout.splitlines()[1:]:
-            image = IMG_LS_REGEX.search(line.decode("utf-8"))
-            if image is not None:
-                out.append(
-                    {
-                        "registry": image.group(1),
-                        "repository": image.group(2),
-                        "tag": image.group(5),
-                        "size": image.group(6),
-                        "created": image.group(7),
-                        "updated": image.group(8),
-                        "digest": image.group(9),
-                    }
-                )
-            else:
-                logger.warn("Did not parse this image: {}".format(line))
-        return out
-
-    def build(self, context_dir, dockerfile, tags, build_args=[]):
-        logger.info("Building docker image {}".format(dockerfile))
-
-        command = ["build", "--state", self.state, "--no-console", "--file", dockerfile]
-
-        for add_tag in tags:
-            command += ["--tag", add_tag]
-
-        # We need to "de-parse" the build args
-        for single_build_arg in build_args:
-            command += ["--build-arg", single_build_arg]
-
-        command.append(context_dir)
-
-        logger.info("Running img command: {}".format(command))
-
-        self.run(command)
-        logger.info("Built image {}".format(", ".join(tags)))
-
-    def save(self, tags, path):
-        assert isinstance(tags, list)
-        assert len(tags) > 0, "Missing tags to save"
-
-        # First save the image using only one tag
-        # img does not support (yet) writing multiple tags
-        main_tag = tags[0]
-        logger.info("Saving image {} to {}".format(main_tag, path))
-        self.run(["save", "--state", self.state, "--output", path, main_tag])
-
-        # Patch the produced image to add other tags
-        if len(tags) > 1:
-            manifest = read_manifest(path)
-            manifest[0]["RepoTags"] = tags
-            write_manifest(path, manifest)
-
-    def push(self, tag):
-        logger.info("Pushing image {}".format(tag))
-        self.run(["push", "--state", self.state, tag])
 
 
 class DinD(Tool):
