@@ -191,7 +191,7 @@ class DinD(Tool):
     Interface to the Docker In Docker Taskcluster feature
     """
 
-    def __init__(self, cache=None):
+    def __init__(self):
         # Check version of remote daemon
         self.client = really_old_docker.from_env(version=TASKCLUSTER_DIND_API_VERSION)
         version = self.client.version()

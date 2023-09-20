@@ -109,7 +109,7 @@ def build_compose(target, args):
     Read a compose file and build each image described as buildable
     """
     assert args.build_retries > 0, "Build retries must be a positive integer"
-    build_tool = Podman(cache=args.cache)
+    build_tool = Podman()
 
     # Check the dockerfile is available in target
     composefile = target.check_path(args.composefile)

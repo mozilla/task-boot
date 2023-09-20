@@ -54,11 +54,6 @@ def main() -> None:
     parser.add_argument(
         "--target", type=str, help="Target directory to use a local project"
     )
-    parser.add_argument(
-        "--cache",
-        type=str,
-        help="Path to a local folder used to cache build processes",
-    )
     commands = parser.add_subparsers(help="sub-command help")
     parser.set_defaults(func=usage)
 
