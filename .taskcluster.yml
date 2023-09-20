@@ -79,7 +79,7 @@ tasks:
               cd src
               git checkout ${head_rev} -b taskboot
               python3 -m pip install --no-cache-dir --quiet --user .
-              taskboot --target=/src build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
+              taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
         artifacts:
           - name: public/taskboot/image.tar.zst
             expires: {$fromNow: '2 weeks'}
