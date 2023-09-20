@@ -63,29 +63,28 @@ tasks:
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
-        capabilities:
-          privileged: true
         maxRunTime: 3600
-        image: python:3.10
         env:
           IMAGE: mozilla/taskboot
           REGISTRY: registry.hub.docker.com
           VERSION: "${tag}"
         command:
-          - sh
-          - -lxce
-          - "apt-get -qq update &&
-            apt-get -qq install -y zstd &&
-            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --no-cache-dir --quiet . &&
-            taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
+          - - sh
+            - '-lxce'
+            - |
+              wget https://bootstrap.pypa.io/get-pip.py
+              python3 get-pip.py --user
+              export PATH=$${HOME}/.local/bin:$${PATH}
+              git clone --quiet ${repository} src
+              cd src
+              git checkout ${head_rev} -b taskboot
+              python3 -m pip install --no-cache-dir --quiet --user .
+              taskboot --target=/src build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
         artifacts:
-          public/taskboot/image.tar.zst:
+          - name: public/taskboot/image.tar.zst
             expires: {$fromNow: '2 weeks'}
-            path: /image.tar.zst
+            path: image.tar.zst
             type: file
-      scopes:
-        - docker-worker:capability:privileged
       metadata:
         name: TaskBoot docker build
         description: Taskcluster boot utilities - build latest docker image
@@ -116,7 +115,7 @@ tasks:
               cd src
               git checkout ${head_rev} -b taskboot
               python3 -m pip install --no-cache-dir --quiet --user .
-              taskboot --target=. build --build-tool=podman --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
+              taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
         artifacts:
           - name: public/taskboot/test-podman.tar.zst
             expires: {$fromNow: '2 weeks'}
