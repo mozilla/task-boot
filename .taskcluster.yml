@@ -34,7 +34,7 @@ tasks:
   in:
     - taskId: {$eval: as_slugid("code_checks")}
       provisionerId: proj-relman
-      workerType: ci
+      workerType: generic-worker-ubuntu-22-04
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
@@ -52,46 +52,6 @@ tasks:
       metadata:
         name: TaskBoot code checks
         description: Taskcluster boot utilities - code linting & unit tests
-        owner: bastien@mozilla.com
-        source: https://github.com/mozilla/task-boot
-
-    - taskId: {$eval: as_slugid("docker_build")}
-      dependencies:
-        - {$eval: as_slugid("code_checks")}
-      provisionerId: proj-relman
-      workerType: ci
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      payload:
-        capabilities:
-          privileged: true
-        maxRunTime: 3600
-        image: python:3.10
-        env:
-          IMAGE: mozilla/taskboot
-          REGISTRY: registry.hub.docker.com
-          VERSION: "${tag}"
-          IMG_SHA256: cc9bf08794353ef57b400d32cd1065765253166b0a09fba360d927cfbd158088
-        command:
-          - sh
-          - -lxce
-          - "apt-get -qq update &&
-            apt-get -qq install -y zstd &&
-            curl -fSL \"https://github.com/genuinetools/img/releases/download/v0.5.11/img-linux-amd64\" -o \"/usr/local/bin/img\" &&
-            echo \"$IMG_SHA256  /usr/local/bin/img\" | sha256sum -c - && chmod a+x \"/usr/local/bin/img\" &&
-            git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --no-cache-dir --quiet . &&
-            taskboot --target=/src build --image=$IMAGE --tag=$VERSION --write /image.tar Dockerfile"
-        artifacts:
-          public/taskboot/image.tar.zst:
-            expires: {$fromNow: '2 weeks'}
-            path: /image.tar.zst
-            type: file
-      scopes:
-        - docker-worker:capability:privileged
-      metadata:
-        name: TaskBoot docker build
-        description: Taskcluster boot utilities - build latest docker image
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
@@ -135,7 +95,7 @@ tasks:
       dependencies:
         - {$eval: as_slugid("docker_build_podman")}
       provisionerId: proj-relman
-      workerType: ci
+      workerType: generic-worker-ubuntu-22-04
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
@@ -156,7 +116,7 @@ tasks:
         dependencies:
           - {$eval: as_slugid("docker_build")}
         provisionerId: proj-relman
-        workerType: ci
+        workerType: generic-worker-ubuntu-22-04
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
         payload:
@@ -190,7 +150,7 @@ tasks:
         dependencies:
           - {$eval: as_slugid("docker_push")}
         provisionerId: proj-relman
-        workerType: ci
+        workerType: generic-worker-ubuntu-22-04
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
         payload:

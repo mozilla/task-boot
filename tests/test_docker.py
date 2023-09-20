@@ -129,10 +129,8 @@ def test_list_local_images(mock_docker):
 
     mock_docker.images = [
         (
-            "registry.com/repo/test:latest",
-            "10.9MiB",
-            "1 days ago",
-            "1 days ago",
+            "registry.com/repo/test",
+            "latest",
             "sha256:991d19e5156799aa79cf7138b8b843601f180e68f625b892df40a1993b7ac7da",
         )
     ]
@@ -141,9 +139,6 @@ def test_list_local_images(mock_docker):
             "registry": "registry.com",
             "repository": "repo/test",
             "tag": "latest",
-            "size": "10.9MiB",
-            "created": "1 days ago",
-            "updated": "1 days ago",
             "digest": "991d19e5156799aa79cf7138b8b843601f180e68f625b892df40a1993b7ac7da",
         }
     ]

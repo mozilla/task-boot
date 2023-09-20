@@ -7,7 +7,7 @@ Features
 --------
 
 * clone a git repo
-* build a docker image in a Taskcluster task without `dind`, by using the excellent project [img](https://github.com/genuinetools/img/)
+* build a docker image in a Taskcluster task without `dind`, by using [podman](https://podman.io/)
 * push that docker image to a Docker repo, reading credentials from a Taskcluster secret
 * build multiple docker images using a `docker-compose.yml` file
 * build/update a Taskcluster hook
@@ -23,8 +23,3 @@ Documentation
 -------------
 
 A more detailed documentation is available in this [project's wiki](https://github.com/mozilla/task-boot/wiki).
-
-System requirements
--------------------
-
-* `img` must be at least in version 0.5.2 to support multiple tags

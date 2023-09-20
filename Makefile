@@ -3,7 +3,7 @@ TAG=mozilla/taskboot
 VERSION=$(shell cat $(ROOT_DIR)/VERSION)
 
 build:
-	img build -t $(TAG):latest -t $(TAG):$(VERSION) $(ROOT_DIR)
+	podman build -t $(TAG):latest -t $(TAG):$(VERSION) $(ROOT_DIR)
 
 publish:
-	img push $(TAG):latest
+	podman push $(TAG):latest

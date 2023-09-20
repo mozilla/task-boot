@@ -1,9 +1,6 @@
 # syntax=docker/dockerfile:experimental
 FROM python:3.10-alpine
 
-# Add img
-RUN apk add --no-cache img --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
-
 # Setup other deps
 RUN apk add --no-cache git skopeo docker cargo podman cni-plugins fuse-overlayfs zstd \
     && sed -i 's/^#mount_program/mount_program/' /etc/containers/storage.conf
