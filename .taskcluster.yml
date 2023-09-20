@@ -114,7 +114,7 @@ tasks:
       then:
         taskId: {$eval: as_slugid("docker_push")}
         dependencies:
-          - {$eval: as_slugid("docker_build")}
+          - {$eval: as_slugid("docker_build_podman")}
         provisionerId: proj-relman
         workerType: generic-worker-ubuntu-22-04
         created: {$fromNow: ''}
