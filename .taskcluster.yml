@@ -55,7 +55,7 @@ tasks:
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
-    - taskId: {$eval: as_slugid("docker_build_podman")}
+    - taskId: {$eval: as_slugid("docker_build")}
       dependencies:
         - {$eval: as_slugid("code_checks")}
       provisionerId: proj-relman
@@ -79,21 +79,57 @@ tasks:
               cd src
               git checkout ${head_rev} -b taskboot
               python3 -m pip install --no-cache-dir --quiet --user .
-              taskboot --target=. build --build-tool=podman --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
+              taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
+        artifacts:
+          - name: public/taskboot/image.tar.zst
+            expires: {$fromNow: '2 weeks'}
+            path: image.tar.zst
+            type: file
+      metadata:
+        name: TaskBoot docker build
+        description: Taskcluster boot utilities - build latest docker image
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/task-boot
+
+    - taskId: {$eval: as_slugid("docker_build_test")}
+      dependencies:
+        - {$eval: as_slugid("code_checks")}
+      provisionerId: proj-relman
+      workerType: generic-worker-ubuntu-22-04
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      payload:
+        maxRunTime: 3600
+        env:
+          IMAGE: mozilla/taskboot
+          REGISTRY: registry.hub.docker.com
+          VERSION: "${tag}"
+        command:
+          - - sh
+            - '-lxce'
+            - |
+              wget https://bootstrap.pypa.io/get-pip.py
+              python3 get-pip.py --user
+              export PATH=$${HOME}/.local/bin:$${PATH}
+              git clone --quiet ${repository} src
+              cd src
+              git checkout ${head_rev} -b taskboot
+              python3 -m pip install --no-cache-dir --quiet --user .
+              taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
         artifacts:
           - name: public/taskboot/test-podman.tar.zst
             expires: {$fromNow: '2 weeks'}
             path: image.tar.zst
             type: file
       metadata:
-        name: TaskBoot docker build using podman
+        name: TaskBoot docker build (test image)
         description: Taskcluster boot utilities - build a test image
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/task-boot
 
     - taskId: {$eval: as_slugid("docker_run_podman")}
       dependencies:
-        - {$eval: as_slugid("docker_build_podman")}
+        - {$eval: as_slugid("docker_build_test")}
       provisionerId: proj-relman
       workerType: generic-worker-ubuntu-22-04
       created: {$fromNow: ''}
@@ -103,7 +139,7 @@ tasks:
         image:
           type: task-image
           path: public/taskboot/test-podman.tar.zst
-          taskId: {$eval: as_slugid("docker_build_podman")}
+          taskId: {$eval: as_slugid("docker_build_test")}
       metadata:
         name: TaskBoot docker run podman image
         description: Taskcluster boot utilities - run a test image
@@ -114,7 +150,7 @@ tasks:
       then:
         taskId: {$eval: as_slugid("docker_push")}
         dependencies:
-          - {$eval: as_slugid("docker_build_podman")}
+          - {$eval: as_slugid("docker_build")}
         provisionerId: proj-relman
         workerType: generic-worker-ubuntu-22-04
         created: {$fromNow: ''}
