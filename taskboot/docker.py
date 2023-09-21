@@ -314,6 +314,13 @@ class Podman(Docker):
                 image["digest"] = image["digest"][7:]
         return result
 
+    def save(self, tags, path):
+        assert isinstance(tags, list)
+        assert len(tags) > 0, "Missing tags"
+        logger.info("Saving image with tags {} to {}".format(", ".join(tags), path))
+        command = ["save", "--format", "oci-archive", "--output", path] + tags
+        self.run(command)
+
 
 class Skopeo(Tool):
     """
@@ -361,7 +368,7 @@ class Skopeo(Tool):
                 "copy",
                 "--authfile",
                 self.auth_file,
-                "docker-archive:{}".format(path),
+                "oci-archive:{}".format(path),
                 "docker://{}".format(tag),
             ]
             self.run(cmd)
