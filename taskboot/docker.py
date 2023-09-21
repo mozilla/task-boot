@@ -33,17 +33,22 @@ def read_archive_tags(path):
     tar = tarfile.open(path)
     tags = []
     try:
-        manifest_raw = tar.extractfile("manifest.json")
-        manifest = json.loads(manifest_raw.read().decode("utf-8"))
-        tags = manifest[0]["RepoTags"]
+        index_raw = tar.extractfile("index.json")
+        index = json.loads(index_raw.read().decode("utf-8"))
+        tags = index["manifests"][0]["annotations"]["org.opencontainers.image.ref.name"]
     except KeyError:
-        # Use older image format:
-        # {"registry.hub.docker.com/xyz/":{"master":"02d3443146cc39d41207919f156869d60942cd3eafeec793a4ac39f905f6f7c6"}}
-        repositories_raw = tar.extractfile("repositories")
-        repositories = json.loads(repositories_raw.read().decode("utf-8"))
-        for repo, tag_and_sha in repositories.items():
-            for tag, sha in tag_and_sha.items():
-                tags.append("{}:{}".format(repo, tag))
+        try:
+            manifest_raw = tar.extractfile("manifest.json")
+            manifest = json.loads(manifest_raw.read().decode("utf-8"))
+            tags = manifest[0]["RepoTags"]
+        except KeyError:
+            # Use older image format:
+            # {"registry.hub.docker.com/xyz/":{"master":"02d3443146cc39d41207919f156869d60942cd3eafeec793a4ac39f905f6f7c6"}}
+            repositories_raw = tar.extractfile("repositories")
+            repositories = json.loads(repositories_raw.read().decode("utf-8"))
+            for repo, tag_and_sha in repositories.items():
+                for tag, sha in tag_and_sha.items():
+                    tags.append("{}:{}".format(repo, tag))
 
     assert len(tags) > 0, "No tags found"
     return tags
