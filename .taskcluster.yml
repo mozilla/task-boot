@@ -31,183 +31,187 @@ tasks:
         then: {$eval: 'event.ref[10:]' }
         else: "latest"
       else: "latest"
+
   in:
-    - taskId: {$eval: as_slugid("code_checks")}
-      provisionerId: proj-relman
-      workerType: generic-worker-ubuntu-22-04
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      payload:
-        maxRunTime: 3600
-        image: python:3.10
-        env:
-          GIT_REPOSITORY: ${repository}
-          GIT_REVISION: ${head_rev}
-        command:
-          - sh
-          - -lxce
-          - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-            pip install --no-cache-dir --quiet -r requirements-tests.txt . &&
-            pre-commit run -a --show-diff-on-failure && pytest -v"
-      metadata:
-        name: TaskBoot code checks
-        description: Taskcluster boot utilities - code linting & unit tests
-        owner: bastien@mozilla.com
-        source: https://github.com/mozilla/task-boot
+    $flatten:
+      - $if: 'tasks_for == "github-push" || (tasks_for[:19] == "github-pull-request" && event.action in ["opened", "reopened", "synchronize"])'
+        then:
+          - taskId: {$eval: as_slugid("code_checks")}
+            provisionerId: proj-relman
+            workerType: generic-worker-ubuntu-22-04
+            created: {$fromNow: ''}
+            deadline: {$fromNow: '1 hour'}
+            payload:
+              maxRunTime: 3600
+              image: python:3.10
+              env:
+                GIT_REPOSITORY: ${repository}
+                GIT_REVISION: ${head_rev}
+              command:
+                - sh
+                - -lxce
+                - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+                  pip install --no-cache-dir --quiet -r requirements-tests.txt . &&
+                  pre-commit run -a --show-diff-on-failure && pytest -v"
+            metadata:
+              name: TaskBoot code checks
+              description: Taskcluster boot utilities - code linting & unit tests
+              owner: bastien@mozilla.com
+              source: https://github.com/mozilla/task-boot
 
-    - taskId: {$eval: as_slugid("docker_build")}
-      dependencies:
-        - {$eval: as_slugid("code_checks")}
-      provisionerId: proj-relman
-      workerType: generic-worker-ubuntu-22-04
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      payload:
-        maxRunTime: 3600
-        env:
-          IMAGE: mozilla/taskboot
-          REGISTRY: registry.hub.docker.com
-          VERSION: "${tag}"
-        command:
-          - - sh
-            - '-lxce'
-            - |
-              wget https://bootstrap.pypa.io/get-pip.py
-              python3 get-pip.py --user
-              export PATH=$${HOME}/.local/bin:$${PATH}
-              git clone --quiet ${repository} src
-              cd src
-              git checkout ${head_rev} -b taskboot
-              python3 -m pip install --no-cache-dir --quiet --user .
-              taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
-        artifacts:
-          - name: public/taskboot/image.tar.zst
-            expires: {$fromNow: '2 weeks'}
-            path: image.tar.zst
-            type: file
-      metadata:
-        name: TaskBoot docker build
-        description: Taskcluster boot utilities - build latest docker image
-        owner: bastien@mozilla.com
-        source: https://github.com/mozilla/task-boot
+          - taskId: {$eval: as_slugid("docker_build")}
+            dependencies:
+              - {$eval: as_slugid("code_checks")}
+            provisionerId: proj-relman
+            workerType: generic-worker-ubuntu-22-04
+            created: {$fromNow: ''}
+            deadline: {$fromNow: '1 hour'}
+            payload:
+              maxRunTime: 3600
+              env:
+                IMAGE: mozilla/taskboot
+                REGISTRY: registry.hub.docker.com
+                VERSION: "${tag}"
+              command:
+                - - sh
+                  - '-lxce'
+                  - |
+                    wget https://bootstrap.pypa.io/get-pip.py
+                    python3 get-pip.py --user
+                    export PATH=$${HOME}/.local/bin:$${PATH}
+                    git clone --quiet ${repository} src
+                    cd src
+                    git checkout ${head_rev} -b taskboot
+                    python3 -m pip install --no-cache-dir --quiet --user .
+                    taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
+              artifacts:
+                - name: public/taskboot/image.tar.zst
+                  expires: {$fromNow: '2 weeks'}
+                  path: image.tar.zst
+                  type: file
+            metadata:
+              name: TaskBoot docker build
+              description: Taskcluster boot utilities - build latest docker image
+              owner: bastien@mozilla.com
+              source: https://github.com/mozilla/task-boot
 
-    - taskId: {$eval: as_slugid("docker_build_test")}
-      dependencies:
-        - {$eval: as_slugid("code_checks")}
-      provisionerId: proj-relman
-      workerType: generic-worker-ubuntu-22-04
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      payload:
-        maxRunTime: 3600
-        env:
-          IMAGE: mozilla/taskboot
-          REGISTRY: registry.hub.docker.com
-          VERSION: "${tag}"
-        command:
-          - - sh
-            - '-lxce'
-            - |
-              wget https://bootstrap.pypa.io/get-pip.py
-              python3 get-pip.py --user
-              export PATH=$${HOME}/.local/bin:$${PATH}
-              git clone --quiet ${repository} src
-              cd src
-              git checkout ${head_rev} -b taskboot
-              python3 -m pip install --no-cache-dir --quiet --user .
-              taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
-        artifacts:
-          - name: public/taskboot/test-podman.tar.zst
-            expires: {$fromNow: '2 weeks'}
-            path: image.tar.zst
-            type: file
-      metadata:
-        name: TaskBoot docker build (test image)
-        description: Taskcluster boot utilities - build a test image
-        owner: bastien@mozilla.com
-        source: https://github.com/mozilla/task-boot
+          - taskId: {$eval: as_slugid("docker_build_test")}
+            dependencies:
+              - {$eval: as_slugid("code_checks")}
+            provisionerId: proj-relman
+            workerType: generic-worker-ubuntu-22-04
+            created: {$fromNow: ''}
+            deadline: {$fromNow: '1 hour'}
+            payload:
+              maxRunTime: 3600
+              env:
+                IMAGE: mozilla/taskboot
+                REGISTRY: registry.hub.docker.com
+                VERSION: "${tag}"
+              command:
+                - - sh
+                  - '-lxce'
+                  - |
+                    wget https://bootstrap.pypa.io/get-pip.py
+                    python3 get-pip.py --user
+                    export PATH=$${HOME}/.local/bin:$${PATH}
+                    git clone --quiet ${repository} src
+                    cd src
+                    git checkout ${head_rev} -b taskboot
+                    python3 -m pip install --no-cache-dir --quiet --user .
+                    taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
+              artifacts:
+                - name: public/taskboot/test-podman.tar.zst
+                  expires: {$fromNow: '2 weeks'}
+                  path: image.tar.zst
+                  type: file
+            metadata:
+              name: TaskBoot docker build (test image)
+              description: Taskcluster boot utilities - build a test image
+              owner: bastien@mozilla.com
+              source: https://github.com/mozilla/task-boot
 
-    - taskId: {$eval: as_slugid("docker_run_podman")}
-      dependencies:
-        - {$eval: as_slugid("docker_build_test")}
-      provisionerId: proj-relman
-      workerType: generic-worker-ubuntu-22-04
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '1 hour'}
-      payload:
-        maxRunTime: 3600
-        image:
-          type: task-image
-          path: public/taskboot/test-podman.tar.zst
-          taskId: {$eval: as_slugid("docker_build_test")}
-      metadata:
-        name: TaskBoot docker run podman image
-        description: Taskcluster boot utilities - run a test image
-        owner: bastien@mozilla.com
-        source: https://github.com/mozilla/task-boot
+          - taskId: {$eval: as_slugid("docker_run_podman")}
+            dependencies:
+              - {$eval: as_slugid("docker_build_test")}
+            provisionerId: proj-relman
+            workerType: generic-worker-ubuntu-22-04
+            created: {$fromNow: ''}
+            deadline: {$fromNow: '1 hour'}
+            payload:
+              maxRunTime: 3600
+              image:
+                type: task-image
+                path: public/taskboot/test-podman.tar.zst
+                taskId: {$eval: as_slugid("docker_build_test")}
+            metadata:
+              name: TaskBoot docker run podman image
+              description: Taskcluster boot utilities - run a test image
+              owner: bastien@mozilla.com
+              source: https://github.com/mozilla/task-boot
 
-    - $if: 'tasks_for == "github-push" && (head_branch == "refs/heads/master" || head_branch[:10] == "refs/tags/")'
-      then:
-        taskId: {$eval: as_slugid("docker_push")}
-        dependencies:
-          - {$eval: as_slugid("docker_build")}
-        provisionerId: proj-relman
-        workerType: generic-worker-ubuntu-22-04
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '1 hour'}
-        payload:
-          features:
-            # Needed for access to secret
-            taskclusterProxy: true
-          maxRunTime: 3600
-          image: python:3.10
-          env:
-            TASKCLUSTER_SECRET: project/relman/taskboot/deploy
-          command:
-            - sh
-            - -lxce
-            - "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list &&
-              curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/Release.key | apt-key add - &&
-              apt-get -qq update && apt-get -qq install -y skopeo zstd &&
-              git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
-              pip install --no-cache-dir --quiet . &&
-              taskboot push-artifact"
-        scopes:
-          - secrets:get:project/relman/taskboot/deploy
-        metadata:
-          name: TaskBoot docker push
-          description: Taskcluster boot utilities - push docker image
-          owner: bastien@mozilla.com
-          source: https://github.com/mozilla/task-boot
+      - $if: 'tasks_for == "github-push" && (head_branch == "refs/heads/master" || head_branch[:10] == "refs/tags/")'
+        then:
+          taskId: {$eval: as_slugid("docker_push")}
+          dependencies:
+            - {$eval: as_slugid("docker_build")}
+          provisionerId: proj-relman
+          workerType: generic-worker-ubuntu-22-04
+          created: {$fromNow: ''}
+          deadline: {$fromNow: '1 hour'}
+          payload:
+            features:
+              # Needed for access to secret
+              taskclusterProxy: true
+            maxRunTime: 3600
+            image: python:3.10
+            env:
+              TASKCLUSTER_SECRET: project/relman/taskboot/deploy
+            command:
+              - sh
+              - -lxce
+              - "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list &&
+                curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/Release.key | apt-key add - &&
+                apt-get -qq update && apt-get -qq install -y skopeo zstd &&
+                git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b taskboot &&
+                pip install --no-cache-dir --quiet . &&
+                taskboot push-artifact"
+          scopes:
+            - secrets:get:project/relman/taskboot/deploy
+          metadata:
+            name: TaskBoot docker push
+            description: Taskcluster boot utilities - push docker image
+            owner: bastien@mozilla.com
+            source: https://github.com/mozilla/task-boot
 
-    - $if: 'tasks_for == "github-push" && head_branch[:10] == "refs/tags/"'
-      then:
-        taskId: {$eval: as_slugid("release")}
-        dependencies:
-          - {$eval: as_slugid("docker_push")}
-        provisionerId: proj-relman
-        workerType: generic-worker-ubuntu-22-04
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '1 hour'}
-        payload:
-          features:
-            # Needed for access to secret
-            taskclusterProxy: true
-          maxRunTime: 3600
+      - $if: 'tasks_for == "github-push" && head_branch[:10] == "refs/tags/"'
+        then:
+          taskId: {$eval: as_slugid("release")}
+          dependencies:
+            - {$eval: as_slugid("docker_push")}
+          provisionerId: proj-relman
+          workerType: generic-worker-ubuntu-22-04
+          created: {$fromNow: ''}
+          deadline: {$fromNow: '1 hour'}
+          payload:
+            features:
+              # Needed for access to secret
+              taskclusterProxy: true
+            maxRunTime: 3600
 
-          # Use the image just uploaded !
-          image: "mozilla/taskboot:${tag}"
-          env:
-            TASKCLUSTER_SECRET: project/relman/taskboot/deploy
-          command:
-            - taskboot
-            - github-release
-            - mozilla/task-boot
-            - "${tag}"
-        scopes:
-          - secrets:get:project/relman/taskboot/deploy
-        metadata:
-          name: "TaskBoot github release ${tag}"
-          description: Taskcluster boot utilities - ship a new release
-          owner: bastien@mozilla.com
-          source: https://github.com/mozilla/task-boot
+            # Use the image just uploaded !
+            image: "mozilla/taskboot:${tag}"
+            env:
+              TASKCLUSTER_SECRET: project/relman/taskboot/deploy
+            command:
+              - taskboot
+              - github-release
+              - mozilla/task-boot
+              - "${tag}"
+          scopes:
+            - secrets:get:project/relman/taskboot/deploy
+          metadata:
+            name: "TaskBoot github release ${tag}"
+            description: Taskcluster boot utilities - ship a new release
+            owner: bastien@mozilla.com
+            source: https://github.com/mozilla/task-boot
