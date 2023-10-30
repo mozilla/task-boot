@@ -359,6 +359,8 @@ class Skopeo(Tool):
             cmd = [
                 "--debug",
                 "copy",
+                "--retry-times",
+                3,
                 "--authfile",
                 self.auth_file,
                 "docker-archive:{}".format(path),
