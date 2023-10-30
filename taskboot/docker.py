@@ -360,7 +360,7 @@ class Skopeo(Tool):
                 "--debug",
                 "copy",
                 "--retry-times",
-                3,
+                "3",
                 "--authfile",
                 self.auth_file,
                 "docker-archive:{}".format(path),
