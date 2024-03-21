@@ -8,6 +8,8 @@ import os
 import subprocess
 import tempfile
 
+from taskboot.utils import retry
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,27 +37,16 @@ class Target(object):
         logger.info("Cloning {} @ {}".format(repository, revision))
 
         # Clone
-        cmd = ["git", "clone", "--quiet", repository, self.dir]
+        cmd = ["git", "-c", "init.defaultBranch=clone", "init", self.dir]
         subprocess.check_output(cmd)
+        cmd = ["git", "remote", "add", "origin", repository]
+        subprocess.check_output(cmd, cwd=self.dir)
+        cmd = ["git", "fetch", "--quiet", "origin", revision]
+        retry(lambda: subprocess.check_output(cmd, cwd=self.dir))
         logger.info("Cloned into {}".format(self.dir))
 
-        # Explicitly fetch revision if it isn't present
-        # This is necessary when revision is from a fork
-        # and repository is the base repo.
-        if (
-            subprocess.run(
-                ["git", "show", revision],
-                cwd=self.dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            ).returncode
-            != 0
-        ):
-            cmd = ["git", "fetch", "--quiet", "origin", revision]
-            subprocess.check_output(cmd, cwd=self.dir)
-
         # Checkout revision to pull modifications
-        cmd = ["git", "checkout", revision, "-b", "taskboot"]
+        cmd = ["git", "checkout", "FETCH_HEAD", "-b", "taskboot"]
         subprocess.check_output(cmd, cwd=self.dir)
         logger.info("Checked out revision {}".format(revision))
 
