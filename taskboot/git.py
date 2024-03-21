@@ -9,6 +9,7 @@ import subprocess
 
 from taskboot.config import Configuration
 from taskboot.target import Target
+from taskboot.utils import retry
 
 logger = logging.getLogger(__name__)
 
@@ -34,4 +35,4 @@ def git_push(target: Target, args: argparse.Namespace) -> None:
     else:
         command = ["git", "push", "origin", args.branch]
 
-    subprocess.run(command, check=True)
+    retry(lambda: subprocess.run(command, check=True))
