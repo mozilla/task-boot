@@ -38,7 +38,7 @@ tasks:
         then:
           - taskId: {$eval: as_slugid("code_checks")}
             provisionerId: proj-relman
-            workerType: generic-worker-ubuntu-22-04
+            workerType: generic-worker-ubuntu-24-04
             created: {$fromNow: ''}
             deadline: {$fromNow: '1 hour'}
             payload:
@@ -63,7 +63,7 @@ tasks:
             dependencies:
               - {$eval: as_slugid("code_checks")}
             provisionerId: proj-relman
-            workerType: generic-worker-ubuntu-22-04
+            workerType: generic-worker-ubuntu-24-04
             created: {$fromNow: ''}
             deadline: {$fromNow: '1 hour'}
             payload:
@@ -76,13 +76,13 @@ tasks:
                 - - sh
                   - '-lxce'
                   - |
-                    wget https://bootstrap.pypa.io/get-pip.py
-                    python3 get-pip.py --user
-                    export PATH=$${HOME}/.local/bin:$${PATH}
+                    python3 -m venv myenv
+                    . myenv/bin/activate
+                    pip install setuptools
                     git clone --quiet ${repository} src
                     cd src
                     git checkout ${head_rev} -b taskboot
-                    python3 -m pip install --no-cache-dir --quiet --user .
+                    pip install --no-cache-dir --quiet .
                     taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar Dockerfile
               artifacts:
                 - name: public/taskboot/image.tar.zst
@@ -99,7 +99,7 @@ tasks:
             dependencies:
               - {$eval: as_slugid("code_checks")}
             provisionerId: proj-relman
-            workerType: generic-worker-ubuntu-22-04
+            workerType: generic-worker-ubuntu-24-04
             created: {$fromNow: ''}
             deadline: {$fromNow: '1 hour'}
             payload:
@@ -112,13 +112,13 @@ tasks:
                 - - sh
                   - '-lxce'
                   - |
-                    wget https://bootstrap.pypa.io/get-pip.py
-                    python3 get-pip.py --user
-                    export PATH=$${HOME}/.local/bin:$${PATH}
+                    python3 -m venv myenv
+                    . myenv/bin/activate
+                    pip install setuptools
                     git clone --quiet ${repository} src
                     cd src
                     git checkout ${head_rev} -b taskboot
-                    python3 -m pip install --no-cache-dir --quiet --user .
+                    pip install --no-cache-dir --quiet .
                     taskboot --target=. build --image=$${IMAGE} --tag=$${VERSION} --write ../image.tar tests/dockerfile.empty
               artifacts:
                 - name: public/taskboot/test-podman.tar.zst
@@ -135,7 +135,7 @@ tasks:
             dependencies:
               - {$eval: as_slugid("docker_build_test")}
             provisionerId: proj-relman
-            workerType: generic-worker-ubuntu-22-04
+            workerType: generic-worker-ubuntu-24-04
             created: {$fromNow: ''}
             deadline: {$fromNow: '1 hour'}
             payload:
@@ -156,7 +156,7 @@ tasks:
           dependencies:
             - {$eval: as_slugid("docker_build")}
           provisionerId: proj-relman
-          workerType: generic-worker-ubuntu-22-04
+          workerType: generic-worker-ubuntu-24-04
           created: {$fromNow: ''}
           deadline: {$fromNow: '1 hour'}
           payload:
@@ -190,7 +190,7 @@ tasks:
           dependencies:
             - {$eval: as_slugid("docker_push")}
           provisionerId: proj-relman
-          workerType: generic-worker-ubuntu-22-04
+          workerType: generic-worker-ubuntu-24-04
           created: {$fromNow: ''}
           deadline: {$fromNow: '1 hour'}
           payload:
