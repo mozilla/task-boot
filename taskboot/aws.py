@@ -25,9 +25,9 @@ def push_s3(target: Target, args: argparse.Namespace) -> None:
     Push files from a remote task on an AWS S3 bucket
     """
     assert args.task_id is not None, "Missing task id"
-    assert not args.artifact_folder.endswith(
-        "/"
-    ), "Artifact folder {} must not end in /".format(args.artifact_folder)
+    assert not args.artifact_folder.endswith("/"), (
+        "Artifact folder {} must not end in /".format(args.artifact_folder)
+    )
 
     # Load config from file/secret
     config = Configuration(args)

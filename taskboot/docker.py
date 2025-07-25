@@ -177,9 +177,9 @@ class Docker(Tool):
 
         for tag in tags:
             # Check the registry is in the tag
-            assert tag.startswith(
-                self.registry
-            ), "Invalid tag {} : must use registry {}".format(tag, self.registry)
+            assert tag.startswith(self.registry), (
+                "Invalid tag {} : must use registry {}".format(tag, self.registry)
+            )
 
             logger.info("Pushing image as {}".format(tag))
             self.push(tag)
@@ -195,9 +195,9 @@ class DinD(Tool):
         # Check version of remote daemon
         self.client = really_old_docker.from_env(version=TASKCLUSTER_DIND_API_VERSION)
         version = self.client.version()
-        assert (
-            version["ApiVersion"] == TASKCLUSTER_DIND_API_VERSION
-        ), f"DinD version mismatch: {version}"
+        assert version["ApiVersion"] == TASKCLUSTER_DIND_API_VERSION, (
+            f"DinD version mismatch: {version}"
+        )
 
     def list_images(self):
         """
@@ -351,9 +351,9 @@ class Skopeo(Tool):
 
         for tag in tags:
             # Check the registry is in the tag
-            assert tag.startswith(
-                self.registry
-            ), "Invalid tag {} : must use registry {}".format(tag, self.registry)
+            assert tag.startswith(self.registry), (
+                "Invalid tag {} : must use registry {}".format(tag, self.registry)
+            )
 
             logger.info("Pushing image as {}".format(tag))
             cmd = [

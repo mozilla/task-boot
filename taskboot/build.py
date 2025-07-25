@@ -71,9 +71,9 @@ def build_image(target, args):
     if args.write:
         output = os.path.realpath(args.write)
         assert output.lower().endswith(".tar"), "Destination path must ends in .tar"
-        assert os.access(
-            os.path.dirname(output), os.W_OK | os.W_OK
-        ), "Destination is not writable"
+        assert os.access(os.path.dirname(output), os.W_OK | os.W_OK), (
+            "Destination is not writable"
+        )
 
     # Build the tags
     base_image = args.image or "taskboot-{}".format(uuid.uuid4())
@@ -118,9 +118,9 @@ def build_compose(target, args):
     compose = yaml.load(open(composefile), Loader=yaml.SafeLoader)
     version = compose.get("version")
     assert version is not None, "Missing version in {}".format(composefile)
-    assert compose["version"].startswith(
-        "3."
-    ), "Only docker compose version 3 is supported"
+    assert compose["version"].startswith("3."), (
+        "Only docker compose version 3 is supported"
+    )
 
     # Check output folder
     output = None
