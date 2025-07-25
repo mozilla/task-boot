@@ -7,4 +7,4 @@ pyyaml==6.0.1
 taskcluster==72.0.1
 taskcluster-urls==13.0.1
 twine==5.1.1
-yarl==1.9.4
+yarl==1.13.1
