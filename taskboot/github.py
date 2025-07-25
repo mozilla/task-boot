@@ -155,9 +155,14 @@ def github_repository_dispatch(target: Target, args: argparse.Namespace) -> None
     except UnknownObjectException:
         raise Exception(f"Repository {args.repository} is not available")
 
-    repository.create_repository_dispatch(
+    result = repository.create_repository_dispatch(
         args.event_type,
         json.loads(args.client_payload) if args.client_payload is not None else None,
     )
 
-    logger.info("Repository dispatch triggered")
+    if result:
+        logger.info("Repository dispatch triggered")
+    else:
+        raise Exception(
+            f"Failed to trigger repository dispatch for Repository {args.repository}"
+        )
