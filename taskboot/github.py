@@ -142,8 +142,6 @@ def github_repository_dispatch(target: Target, args: argparse.Namespace) -> None
     """
     Push all artifacts from dependent tasks
     """
-    assert args.task_id is not None, "Missing task id"
-
     # Load config from file/secret
     config = Configuration(args)
     assert config.has_git_auth(), "Missing Github authentication"
