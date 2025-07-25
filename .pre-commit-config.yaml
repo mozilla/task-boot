@@ -16,7 +16,7 @@ repos:
           - flake8-copyright==0.2.4
           - flake8-debugger==4.1.2
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: check-ast
       - id: check-docstring-first
@@ -28,16 +28,16 @@ repos:
       - id: check-yaml
       - id: mixed-line-ending
       - id: name-tests-test
-        args: ['--django']
+        args: ["--django"]
       - id: check-json
       - id: requirements-txt-fixer
       - id: check-vcs-permalinks
   - repo: https://github.com/codespell-project/codespell
-    rev: v1.17.1
+    rev: v2.4.1
     hooks:
       - id: codespell
   - repo: https://github.com/marco-c/taskcluster_yml_validator
-    rev: v0.0.10
+    rev: v0.0.12
     hooks:
       - id: taskcluster_yml
   - repo: https://github.com/asottile/yesqa
@@ -45,7 +45,7 @@ repos:
     hooks:
       - id: yesqa
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.2.0
+    rev: v1.15.0
     hooks:
       - id: mypy
         additional_dependencies:
