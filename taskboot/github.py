@@ -5,6 +5,7 @@
 
 import argparse
 import logging
+import json
 import pathlib
 import re
 from typing import List
@@ -154,6 +155,6 @@ def github_repository_dispatch(target: Target, args: argparse.Namespace) -> None
     except UnknownObjectException:
         raise Exception(f"Repository {args.repository} is not available")
 
-    repository.create_repository_dispatch(args.event_type, args.client_payload)
+    repository.create_repository_dispatch(args.event_type, json.loads(args.client_payload))
 
     logger.info("Repository dispatch triggered")
