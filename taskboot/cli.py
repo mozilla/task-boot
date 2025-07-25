@@ -351,7 +351,7 @@ def main() -> None:
         help="Custom webhook event name",
     )
     github_repository_dispatch_cmd.add_argument(
-        "client_payload",
+        "--client_payload",
         type=str,
         help="JSON payload with extra information about the webhook event that the action or workflow may use",
     )
