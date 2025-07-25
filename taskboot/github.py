@@ -136,3 +136,26 @@ def github_release(target: Target, args: argparse.Namespace) -> None:
         release.upload_asset(name=asset_name, path=artifact_path, label=asset_name)
 
     logger.info(f"Release available as {release.html_url}")
+
+
+def github_repository_dispatch(target: Target, args: argparse.Namespace) -> None:
+    """
+    Push all artifacts from dependent tasks
+    """
+    assert args.task_id is not None, "Missing task id"
+
+    # Load config from file/secret
+    config = Configuration(args)
+    assert config.has_git_auth(), "Missing Github authentication"
+
+    # Setup GitHub API client and load repository
+    github = Github(config.git["token"])
+    try:
+        repository = github.get_repo(args.repository)
+        logger.info(f"Loaded Github repository {repository.full_name} #{repository.id}")
+    except UnknownObjectException:
+        raise Exception(f"Repository {args.repository} is not available")
+
+    repository.create_repository_dispatch(args.event_type, args.client_payload)
+
+    logger.info("Repository dispatch triggered")

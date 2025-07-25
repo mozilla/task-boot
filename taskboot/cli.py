@@ -16,6 +16,7 @@ from taskboot.build import build_image
 from taskboot.cargo import cargo_publish
 from taskboot.git import git_push
 from taskboot.github import github_release
+from taskboot.github import github_repository_dispatch
 from taskboot.push import heroku_release
 from taskboot.push import push_artifacts
 from taskboot.pypi import publish_pypi
@@ -301,26 +302,26 @@ def main() -> None:
     git_push_cmd.set_defaults(func=git_push)
 
     # Deploy as a github release
-    github_release_cmd = commands.add_parser(
+    github_repository_dispatch_cmd = commands.add_parser(
         "github-release", help="Create a GitHub release and publish assets"
     )
-    github_release_cmd.add_argument(
+    github_repository_dispatch_cmd.add_argument(
         "repository",
         type=str,
         help="Github repository name to use (example: mozilla/task-boot)",
     )
-    github_release_cmd.add_argument(
+    github_repository_dispatch_cmd.add_argument(
         "version",
         type=str,
         help="Release version tag to create or update on github",
     )
-    github_release_cmd.add_argument(
+    github_repository_dispatch_cmd.add_argument(
         "--task-id",
         type=str,
         default=os.environ.get("TASK_ID"),
         help="Taskcluster task group to analyse",
     )
-    group = github_release_cmd.add_mutually_exclusive_group()
+    group = github_repository_dispatch_cmd.add_mutually_exclusive_group()
     group.add_argument(
         "--local-asset",
         nargs="+",
@@ -333,7 +334,28 @@ def main() -> None:
         type=str,
         help="Asset to upload on the release, retrieved from previously created artifacts. Format is asset-name:path/to/artifact",
     )
-    github_release_cmd.set_defaults(func=github_release)
+    github_repository_dispatch_cmd.set_defaults(func=github_release)
+
+    # Trigger a repository dispatch event
+    github_repository_dispatch_cmd = commands.add_parser(
+        "github-repository-dispatch", help="Trigger a repository dispatch event"
+    )
+    github_repository_dispatch_cmd.add_argument(
+        "repository",
+        type=str,
+        help="Github repository name to use (example: mozilla/task-boot)",
+    )
+    github_repository_dispatch_cmd.add_argument(
+        "event_type",
+        type=str,
+        help="Custom webhook event name",
+    )
+    github_repository_dispatch_cmd.add_argument(
+        "client_payload",
+        type=str,
+        help="JSON payload with extra information about the webhook event that the action or workflow may use",
+    )
+    github_repository_dispatch_cmd.set_defaults(func=github_repository_dispatch)
 
     # Publish on crates.io
     cargo_publish_cmd = commands.add_parser(
