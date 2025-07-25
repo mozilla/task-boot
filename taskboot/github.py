@@ -139,10 +139,7 @@ def github_release(target: Target, args: argparse.Namespace) -> None:
     logger.info(f"Release available as {release.html_url}")
 
 
-def github_repository_dispatch(target: Target, args: argparse.Namespace) -> None:
-    """
-    Push all artifacts from dependent tasks
-    """
+def github_workflow_dispatch(target: Target, args: argparse.Namespace) -> None:
     # Load config from file/secret
     config = Configuration(args)
     assert config.has_git_auth(), "Missing Github authentication"
@@ -155,14 +152,16 @@ def github_repository_dispatch(target: Target, args: argparse.Namespace) -> None
     except UnknownObjectException:
         raise Exception(f"Repository {args.repository} is not available")
 
-    result = repository.create_repository_dispatch(
-        args.event_type,
-        json.loads(args.client_payload) if args.client_payload is not None else None,
+    workflow = repository.get_workflow(args.workflow_id)
+
+    result = workflow.create_dispatch(
+        args.ref,
+        json.loads(args.inputs) if args.inputs is not None else None,
     )
 
     if result:
-        logger.info("Repository dispatch triggered")
+        logger.info("Workflow dispatch triggered")
     else:
         raise Exception(
-            f"Failed to trigger repository dispatch for Repository {args.repository}"
+            f"Failed to trigger workflow dispatch for Repository {args.repository}"
         )

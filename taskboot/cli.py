@@ -16,7 +16,7 @@ from taskboot.build import build_image
 from taskboot.cargo import cargo_publish
 from taskboot.git import git_push
 from taskboot.github import github_release
-from taskboot.github import github_repository_dispatch
+from taskboot.github import github_workflow_dispatch
 from taskboot.push import heroku_release
 from taskboot.push import push_artifacts
 from taskboot.pypi import publish_pypi
@@ -336,26 +336,31 @@ def main() -> None:
     )
     github_release_cmd.set_defaults(func=github_release)
 
-    # Trigger a repository dispatch event
-    github_repository_dispatch_cmd = commands.add_parser(
-        "github-repository-dispatch", help="Trigger a repository dispatch event"
+    # Trigger a workflow dispatch event
+    github_workflow_dispatch_cmd = commands.add_parser(
+        "github-workflow-dispatch", help="Trigger a workflow dispatch event"
     )
-    github_repository_dispatch_cmd.add_argument(
+    github_workflow_dispatch_cmd.add_argument(
         "repository",
         type=str,
         help="Github repository name to use (example: mozilla/task-boot)",
     )
-    github_repository_dispatch_cmd.add_argument(
-        "event_type",
+    github_workflow_dispatch_cmd.add_argument(
+        "workflow_id",
         type=str,
-        help="Custom webhook event name",
+        help="The ID of the workflow. You can also pass the workflow file name as a string (e.g. docker-push.yml).",
     )
-    github_repository_dispatch_cmd.add_argument(
-        "--client_payload",
+    github_workflow_dispatch_cmd.add_argument(
+        "ref",
         type=str,
-        help="JSON payload with extra information about the webhook event that the action or workflow may use",
+        help="The git reference for the workflow. The reference can be a branch or tag name.",
     )
-    github_repository_dispatch_cmd.set_defaults(func=github_repository_dispatch)
+    github_workflow_dispatch_cmd.add_argument(
+        "--inputs",
+        type=str,
+        help="JSON payload with input keys and values configured in the workflow file. The maximum number of properties is 10. Any default properties configured in the workflow file will be used when inputs are omitted.",
+    )
+    github_workflow_dispatch_cmd.set_defaults(func=github_workflow_dispatch)
 
     # Publish on crates.io
     cargo_publish_cmd = commands.add_parser(
