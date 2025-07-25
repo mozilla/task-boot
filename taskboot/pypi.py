@@ -7,7 +7,7 @@ import glob
 import logging
 import os.path
 
-from setuptools import sandbox
+from setuptools._distutils.core import run_setup
 from twine.commands.upload import upload as twine_upload
 from twine.settings import Settings
 
@@ -28,7 +28,7 @@ def publish_pypi(target, args):
     # Build the project
     setup = target.check_path("setup.py")
     logger.info(f"Building Python project using {setup}")
-    sandbox.run_setup(setup, ["clean", "sdist", "bdist_wheel"])
+    run_setup(setup, ["clean", "sdist", "bdist_wheel"])
 
     # Check some files were produced
     dist = target.check_path("dist")
