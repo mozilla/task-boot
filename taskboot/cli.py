@@ -302,26 +302,26 @@ def main() -> None:
     git_push_cmd.set_defaults(func=git_push)
 
     # Deploy as a github release
-    github_repository_dispatch_cmd = commands.add_parser(
+    github_release_cmd = commands.add_parser(
         "github-release", help="Create a GitHub release and publish assets"
     )
-    github_repository_dispatch_cmd.add_argument(
+    github_release_cmd.add_argument(
         "repository",
         type=str,
         help="Github repository name to use (example: mozilla/task-boot)",
     )
-    github_repository_dispatch_cmd.add_argument(
+    github_release_cmd.add_argument(
         "version",
         type=str,
         help="Release version tag to create or update on github",
     )
-    github_repository_dispatch_cmd.add_argument(
+    github_release_cmd.add_argument(
         "--task-id",
         type=str,
         default=os.environ.get("TASK_ID"),
         help="Taskcluster task group to analyse",
     )
-    group = github_repository_dispatch_cmd.add_mutually_exclusive_group()
+    group = github_release_cmd.add_mutually_exclusive_group()
     group.add_argument(
         "--local-asset",
         nargs="+",
@@ -334,7 +334,7 @@ def main() -> None:
         type=str,
         help="Asset to upload on the release, retrieved from previously created artifacts. Format is asset-name:path/to/artifact",
     )
-    github_repository_dispatch_cmd.set_defaults(func=github_release)
+    github_release_cmd.set_defaults(func=github_release)
 
     # Trigger a repository dispatch event
     github_repository_dispatch_cmd = commands.add_parser(
