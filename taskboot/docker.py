@@ -126,7 +126,7 @@ class Docker(Tool):
     def build(self, context_dir, dockerfile, tags, build_args=[]):
         logger.info("Building docker image {}".format(dockerfile))
 
-        command = ["build", "--file", dockerfile]
+        command = ["build", "--file", dockerfile] + self.build_flags()
 
         for add_tag in tags:
             command += ["--tag", add_tag]
@@ -140,6 +140,9 @@ class Docker(Tool):
 
         self.run(command)
         logger.info("Built image {}".format(", ".join(tags)))
+
+    def build_flags(self):
+        return []
 
     def save(self, tags, path):
         assert isinstance(tags, list)
@@ -302,6 +305,11 @@ class Podman(Docker):
 
     def __init__(self):
         Tool.__init__(self, "podman")
+
+    def build_flags(self):
+        # Intermediate layers are only useful as a cache for later builds, which
+        # we never have, and committing each of them is slow.
+        return ["--layers=false"]
 
     def list_images(self):
         """
