@@ -3,8 +3,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import subprocess
 import uuid
 
+import pytest
+
+from taskboot import docker
 from taskboot.build import gen_docker_images
 from taskboot.docker import get_filesystem_type
 from taskboot.docker import parse_image_name
@@ -222,3 +226,49 @@ def test_get_filesystem_type(tmp_path):
     assert get_filesystem_type("/var/lib/containers/storage/x", mounts) == "ext4"
     assert get_filesystem_type("/var/lib/containers", mounts) == "overlay"
     assert get_filesystem_type("/proc/self", mounts) == "proc"
+
+
+@pytest.mark.parametrize("failing_command", [None, "mkfs.ext4", "--bind"])
+def test_setup_native_overlay(monkeypatch, tmp_path, failing_command):
+    """
+    Check the native overlay storage setup, and its cleanup when it fails
+    """
+    native_dir = str(tmp_path / "native")
+    monkeypatch.setattr(docker, "PODMAN_GRAPHROOT", str(tmp_path / "graphroot"))
+    monkeypatch.setattr(docker, "NATIVE_OVERLAY_DIR", native_dir)
+    monkeypatch.setattr(docker, "get_filesystem_type", lambda path: "overlay")
+    monkeypatch.setattr(docker.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(docker.shutil, "which", lambda binary: "/sbin/" + binary)
+    env: dict[str, str] = {}
+    monkeypatch.setattr(docker.os, "environ", env)
+
+    commands = []
+
+    def fake_run(command, check=False):
+        commands.append(command)
+        if failing_command in command:
+            raise subprocess.CalledProcessError(1, command)
+
+    monkeypatch.setattr(docker.subprocess, "run", fake_run)
+
+    docker.Podman.__new__(docker.Podman).setup_native_overlay()
+
+    if failing_command is None:
+        assert commands[-1] == [
+            "mount",
+            "--bind",
+            native_dir + "/storage",
+            str(tmp_path / "graphroot"),
+        ]
+        assert env == {
+            "STORAGE_OPTS": "overlay.mountopt=nodev",
+            "TMPDIR": native_dir + "/tmp",
+        }
+        assert (tmp_path / "native.img").exists()
+    else:
+        if failing_command == "--bind":
+            assert commands[-1] == ["umount", native_dir]
+        else:
+            assert commands[-1][0] == "mkfs.ext4"
+        assert env == {}
+        assert not (tmp_path / "native.img").exists()
