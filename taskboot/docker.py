@@ -28,6 +28,9 @@ IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
 # so we need to use a *really* outdated client too
 TASKCLUSTER_DIND_API_VERSION = "1.18"
 
+PODMAN_GRAPHROOT = "/var/lib/containers/storage"
+NATIVE_OVERLAY_DIR = "/var/lib/taskboot"
+
 
 def read_archive_tags(path):
     tar = tarfile.open(path)
@@ -306,6 +309,57 @@ class Podman(Docker):
     def __init__(self):
         Tool.__init__(self, "podman")
 
+    def setup_native_overlay(self):
+        """
+        Back podman storage with an ext4 loop device when it would otherwise
+        sit on an overlayfs (e.g. when running in a Docker container): podman
+        then has to use fuse-overlayfs, which makes every commit walk the whole
+        image, whereas the native overlay driver can diff layers directly.
+        Falls back to the default storage if anything goes wrong.
+        """
+        if os.geteuid() != 0 or shutil.which("mkfs.ext4") is None:
+            return
+        if get_filesystem_type(PODMAN_GRAPHROOT) != "overlay":
+            return
+        if os.path.isdir(PODMAN_GRAPHROOT) and os.listdir(PODMAN_GRAPHROOT):
+            logger.info("Podman storage is not empty, keeping it")
+            return
+
+        image = "{}.img".format(NATIVE_OVERLAY_DIR)
+        storage = os.path.join(NATIVE_OVERLAY_DIR, "storage")
+        # Buildah creates overlays (e.g. for rw bind mounts) in its temporary
+        # directory, so it must not be on an overlayfs either.
+        tmp = os.path.join(NATIVE_OVERLAY_DIR, "tmp")
+        mounted = []
+        try:
+            os.makedirs(NATIVE_OVERLAY_DIR, exist_ok=True)
+            # Sparse file, so it only takes the space actually used.
+            with open(image, "wb") as f:
+                f.truncate(shutil.disk_usage(os.path.dirname(image)).free)
+            subprocess.run(["mkfs.ext4", "-q", image], check=True)
+            subprocess.run(
+                ["mount", "-o", "loop", image, NATIVE_OVERLAY_DIR], check=True
+            )
+            mounted.append(NATIVE_OVERLAY_DIR)
+            os.makedirs(storage)
+            os.makedirs(tmp)
+            os.makedirs(PODMAN_GRAPHROOT, exist_ok=True)
+            subprocess.run(["mount", "--bind", storage, PODMAN_GRAPHROOT], check=True)
+            mounted.append(PODMAN_GRAPHROOT)
+        except (OSError, subprocess.CalledProcessError) as e:
+            logger.warning("Could not set up native overlay storage: {}".format(e))
+            for path in reversed(mounted):
+                subprocess.run(["umount", path])
+            if os.path.exists(image):
+                os.remove(image)
+            return
+
+        # Replace the storage options from the configuration, which make podman
+        # use fuse-overlayfs.
+        os.environ["STORAGE_OPTS"] = "overlay.mountopt=nodev"
+        os.environ["TMPDIR"] = tmp
+        logger.info("Using native overlay storage backed by {}".format(image))
+
     def build_flags(self):
         # Intermediate layers are only useful as a cache for later builds, which
         # we never have, and committing each of them is slow.
@@ -376,6 +430,22 @@ class Skopeo(Tool):
             ]
             self.run(cmd)
             logger.info("Push successful")
+
+
+def get_filesystem_type(path, mounts="/proc/self/mounts"):
+    """
+    Find the type of the filesystem holding path, even if it doesn't exist yet
+    """
+    path = os.path.realpath(path)
+    best_mount_point, best_type = "", None
+    with open(mounts) as f:
+        for line in f:
+            _, mount_point, fs_type = line.split()[:3]
+            if (
+                path == mount_point or path.startswith(mount_point.rstrip("/") + "/")
+            ) and len(mount_point) > len(best_mount_point):
+                best_mount_point, best_type = mount_point, fs_type
+    return best_type
 
 
 def docker_id_archive(path):

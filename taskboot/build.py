@@ -55,6 +55,7 @@ def build_image(target, args):
         build_tool = Docker()
     elif args.build_tool == "podman":
         build_tool = Podman()
+        build_tool.setup_native_overlay()
     elif args.build_tool == "dind":
         build_tool = DinD()
     else:
@@ -110,6 +111,7 @@ def build_compose(target, args):
     """
     assert args.build_retries > 0, "Build retries must be a positive integer"
     build_tool = Podman()
+    build_tool.setup_native_overlay()
 
     # Check the dockerfile is available in target
     composefile = target.check_path(args.composefile)
