@@ -6,8 +6,9 @@
 import glob
 import logging
 import os.path
+import subprocess
+import sys
 
-from setuptools._distutils.core import run_setup
 from twine.commands.upload import upload as twine_upload
 from twine.settings import Settings
 
@@ -28,7 +29,11 @@ def publish_pypi(target, args):
     # Build the project
     setup = target.check_path("setup.py")
     logger.info(f"Building Python project using {setup}")
-    run_setup(setup, ["clean", "sdist", "bdist_wheel"])
+    subprocess.run(
+        [sys.executable, setup, "clean", "sdist", "bdist_wheel"],
+        cwd=os.path.dirname(setup),
+        check=True,
+    )
 
     # Check some files were produced
     dist = target.check_path("dist")

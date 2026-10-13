@@ -43,7 +43,7 @@ tasks:
             deadline: {$fromNow: '1 hour'}
             payload:
               maxRunTime: 3600
-              image: python:3.10
+              image: python:3.14
               env:
                 GIT_REPOSITORY: ${repository}
                 GIT_REVISION: ${head_rev}
@@ -197,7 +197,7 @@ tasks:
               # Needed for access to secret
               taskclusterProxy: true
             maxRunTime: 3600
-            image: python:3.10
+            image: python:3.14
             env:
               TASKCLUSTER_SECRET: project/relman/taskboot/deploy
             command:

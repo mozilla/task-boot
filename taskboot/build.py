@@ -13,7 +13,6 @@ import taskcluster_urls
 import yaml
 
 from taskboot.config import Configuration
-from taskboot.docker import DinD
 from taskboot.docker import Docker
 from taskboot.docker import Podman
 from taskboot.docker import patch_dockerfile
@@ -56,8 +55,6 @@ def build_image(target, args):
     elif args.build_tool == "podman":
         build_tool = Podman()
         build_tool.setup_native_overlay()
-    elif args.build_tool == "dind":
-        build_tool = DinD()
     else:
         raise ValueError("Unsupported build tool: {}".format(args.build_tool))
 

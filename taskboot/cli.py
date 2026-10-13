@@ -96,7 +96,7 @@ def main() -> None:
     build.add_argument(
         "--build-tool",
         dest="build_tool",
-        choices=["docker", "dind", "podman"],
+        choices=["docker", "podman"],
         default=os.environ.get("BUILD_TOOL") or "podman",
         help="Tool to build docker images.",
     )

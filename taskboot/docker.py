@@ -5,7 +5,6 @@
 
 import base64
 import hashlib
-import http.client
 import io
 import json
 import logging
@@ -15,18 +14,12 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
-import time
 
-import docker as really_old_docker
 from dockerfile_parse import DockerfileParser
 
 logger = logging.getLogger(__name__)
 
 IMG_NAME_REGEX = re.compile(r"(?P<name>[\/\w\-\._]+):?(?P<tag>\S*)")
-
-# Taskcluster uses a really outdated version of Docker daemon API
-# so we need to use a *really* outdated client too
-TASKCLUSTER_DIND_API_VERSION = "1.18"
 
 PODMAN_GRAPHROOT = "/var/lib/containers/storage"
 NATIVE_OVERLAY_DIR = "/var/lib/taskboot"
@@ -190,115 +183,6 @@ class Docker(Tool):
             logger.info("Pushing image as {}".format(tag))
             self.push(tag)
             logger.info("Push successful")
-
-
-class DinD(Tool):
-    """
-    Interface to the Docker In Docker Taskcluster feature
-    """
-
-    def __init__(self):
-        # Check version of remote daemon
-        self.client = really_old_docker.from_env(version=TASKCLUSTER_DIND_API_VERSION)
-        version = self.client.version()
-        assert version["ApiVersion"] == TASKCLUSTER_DIND_API_VERSION, (
-            f"DinD version mismatch: {version}"
-        )
-
-    def list_images(self):
-        """
-        List images stored on remote daemon
-        """
-
-        def _list_images():
-            for image in self.client.images(all=True):
-                for repo_tag in image["RepoTags"]:
-                    repo, tag = parse_image_name(repo_tag)
-                    image.update({"tag": tag, "repository": repo})
-                    yield image
-
-        return [
-            {
-                "repository": image["repository"],
-                "tag": image["tag"],
-                "size": image["VirtualSize"],
-                "created": image["Created"],
-                "digest": image["Id"],
-            }
-            for image in _list_images()
-        ]
-
-    def build(self, context_dir, dockerfile, tags, build_args=[]):
-        logger.info(f"Building docker image with DinD {dockerfile}")
-        build_output = self.client.build(
-            path=context_dir, dockerfile=dockerfile, buildargs=build_args, tag=tags
-        )
-
-        def _read_line(line):
-            try:
-                state = json.loads(line)
-                if "stream" in state:
-                    out = state["stream"].rstrip()
-                elif "status" in state:
-                    if "id" in state:
-                        out = f"[{state['id']}] {state['status']}"
-                    else:
-                        out = state["status"]
-                    progress = state.get("progressDetail")
-                    if progress and "current" in progress and "total" in progress:
-                        percent = round(100.0 * progress["current"] / progress["total"])
-                        out += f" {percent}%"
-                elif "error" in state:
-                    logger.error(f"DinD build: {state['error']}")
-                    return
-                else:
-                    out = repr(state)
-                logger.info(f"DinD build: {out}")
-            except (KeyError, json.decoder.JSONDecodeError):
-                logger.info(f"DinD build: {line}")
-
-        # Process the docker build by reading the client stream
-        # Sometimes the docker daemon does not respond, crashing the inner read code
-        # So we retry a few times before giving up
-        max_try = 5
-        for i in range(1, max_try + 1):
-            try:
-                for line in build_output:
-                    _read_line(line)
-            except http.client.IncompleteRead:
-                logger.error(
-                    f"Error while reading Docker daemon output, on try {i}/{max_try}"
-                )
-                if i == max_try:
-                    raise Exception(
-                        "Failed to build the docker image, too many read errors"
-                    )
-                time.sleep(i)
-                continue
-
-            # If we reach past the inner loop without hitting the Read exception
-            # the generator has been fully consumed, so the build is done
-            break
-
-        logger.info("Built image {}".format(", ".join(tags)))
-
-    def save(self, tags, path):
-        assert isinstance(tags, list)
-        assert len(tags) > 0, "Missing tags to save"
-
-        # save the image using only one tag
-        main_tag = tags[0]
-        logger.info("Saving image {} to {}".format(main_tag, path))
-
-        image = self.client.get_image(main_tag)
-        with open(path, "wb") as dest:
-            dest.write(image.data)
-
-    def login(self, *args, **kwargs):
-        raise NotImplementedError("Cannot login using dind")
-
-    def push(self, *args, **kwargs):
-        raise NotImplementedError("Cannot push using dind")
 
 
 class Podman(Docker):
