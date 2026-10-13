@@ -1,6 +1,6 @@
 boto3>=1.43.111
 dockerfile-parse==2.0.1
-multidict==6.6.3
+multidict==7.1.0
 PyGithub==2.10.0
 pyyaml==6.0.3
 setuptools==84.0.0
