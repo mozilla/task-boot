@@ -13,8 +13,7 @@ updates:
         - patch
   open-pull-requests-limit: 99
 - package-ecosystem: docker
-  directory:
-    - "/"
+  directory: "/"
   schedule:
     interval: weekly
   groups:
