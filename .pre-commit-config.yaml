@@ -39,7 +39,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          - types-requests==0.1.11
+          - types-requests==2.33.0.20261006
           - types-PyYAML==6.0.12.20260906
   - repo: meta
     hooks:
