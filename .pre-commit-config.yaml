@@ -40,7 +40,7 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-requests==0.1.11
-          - types-PyYAML==5.4.0
+          - types-PyYAML==6.0.12.20260906
   - repo: meta
     hooks:
       - id: check-useless-excludes
