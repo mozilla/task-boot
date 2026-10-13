@@ -150,6 +150,39 @@ tasks:
               owner: bastien@mozilla.com
               source: https://github.com/mozilla/task-boot
 
+          - taskId: {$eval: as_slugid("docker_build_native_overlay")}
+            dependencies:
+              - {$eval: as_slugid("docker_build")}
+            provisionerId: proj-relman
+            workerType: generic-worker-ubuntu-24-04
+            created: {$fromNow: ''}
+            deadline: {$fromNow: '1 hour'}
+            scopes:
+              - docker-worker:capability:privileged
+            payload:
+              maxRunTime: 3600
+              capabilities:
+                privileged: true
+              # Use the taskboot image built from this revision
+              image:
+                type: task-image
+                path: public/taskboot/image.tar.zst
+                taskId: {$eval: as_slugid("docker_build")}
+              command:
+                - sh
+                - -lxce
+                - "set -o pipefail &&
+                  git clone --quiet ${repository} /code && cd /code && git checkout ${head_rev} -b taskboot &&
+                  taskboot --target /code build --write /tmp/test.tar tests/dockerfile.native-overlay 2>&1 | tee /tmp/build.log &&
+                  grep -q 'Using native overlay storage' /tmp/build.log &&
+                  grep -q ' /var/lib/containers/storage ext4 ' /proc/mounts &&
+                  test -f /tmp/test.tar.zst"
+            metadata:
+              name: TaskBoot docker build with native overlay storage
+              description: Taskcluster boot utilities - build an image with the taskboot image, as projects do
+              owner: bastien@mozilla.com
+              source: https://github.com/mozilla/task-boot
+
       - $if: 'tasks_for == "github-push" && (head_branch == "refs/heads/master" || head_branch[:10] == "refs/tags/")'
         then:
           taskId: {$eval: as_slugid("docker_push")}

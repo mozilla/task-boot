@@ -1,0 +1,9 @@
+FROM alpine
+
+# An rw bind mount makes podman create an overlay in its temporary directory.
+RUN --mount=type=bind,target=/context,rw \
+    touch /context/written && test -f /context/tests/dockerfile.native-overlay
+RUN echo 'Hello from taskboot' > /etc/boot
+COPY tests/dockerfile.native-overlay /dockerfile
+
+CMD cat /etc/boot
