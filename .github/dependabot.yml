@@ -4,10 +4,24 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
+  groups:
+    patch:
+      applies-to: version-updates
+      patterns:
+        - "*"
+      update-types:
+        - patch
   open-pull-requests-limit: 99
 - package-ecosystem: docker
   directory:
     - "/"
   schedule:
     interval: weekly
+  groups:
+    patch:
+      applies-to: version-updates
+      patterns:
+        - "*"
+      update-types:
+        - patch
   open-pull-requests-limit: 99
