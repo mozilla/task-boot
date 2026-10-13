@@ -6,6 +6,7 @@
 import uuid
 
 from taskboot.build import gen_docker_images
+from taskboot.docker import get_filesystem_type
 from taskboot.docker import parse_image_name
 from taskboot.docker import patch_dockerfile
 from taskboot.docker import read_manifest
@@ -203,3 +204,21 @@ def test_tags_generation():
         "somewhere.com/repo/myimage:b",
         "somewhere.com/repo/myimage:c",
     ]
+
+
+def test_get_filesystem_type(tmp_path):
+    """
+    Check the filesystem type lookup uses the closest mount point
+    """
+    mounts = tmp_path / "mounts"
+    mounts.write_text(
+        "overlay / overlay rw,relatime 0 0\n"
+        "proc /proc proc rw,nosuid 0 0\n"
+        "/dev/loop0 /var/lib/containers/storage ext4 rw,relatime 0 0\n"
+        "tmpfs /var/lib/containers-other tmpfs rw 0 0\n"
+    )
+
+    assert get_filesystem_type("/var/lib/containers/storage", mounts) == "ext4"
+    assert get_filesystem_type("/var/lib/containers/storage/x", mounts) == "ext4"
+    assert get_filesystem_type("/var/lib/containers", mounts) == "overlay"
+    assert get_filesystem_type("/proc/self", mounts) == "proc"

@@ -2,7 +2,7 @@
 FROM python:3.10-alpine
 
 # Setup other deps
-RUN apk add --no-cache git skopeo docker cargo podman cni-plugins fuse-overlayfs zstd \
+RUN apk add --no-cache git skopeo docker cargo podman cni-plugins fuse-overlayfs e2fsprogs zstd \
     && sed -i 's/^#mount_program/mount_program/' /etc/containers/storage.conf
 
 # Define the working directory
