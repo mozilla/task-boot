@@ -1,4 +1,5 @@
 boto3>=1.43.111
+build==1.6.1
 dockerfile-parse==2.0.1
 multidict==7.1.0
 PyGithub==2.10.0

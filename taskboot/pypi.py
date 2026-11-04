@@ -6,6 +6,7 @@
 import glob
 import logging
 import os.path
+import shutil
 import subprocess
 import sys
 
@@ -26,17 +27,21 @@ def publish_pypi(target, args):
     config = Configuration(args)
     assert config.has_pypi_auth(), "Missing PyPi authentication"
 
-    # Build the project
-    setup = target.check_path("setup.py")
-    logger.info(f"Building Python project using {setup}")
+    # Build the project, supporting both pyproject.toml and setup.py projects
+    assert any(
+        os.path.exists(os.path.join(target.dir, name))
+        for name in ("pyproject.toml", "setup.py")
+    ), "Missing pyproject.toml or setup.py in target"
+    dist = os.path.join(target.dir, "dist")
+    shutil.rmtree(dist, ignore_errors=True)
+    logger.info(f"Building Python project in {target.dir}")
     subprocess.run(
-        [sys.executable, setup, "clean", "sdist", "bdist_wheel"],
-        cwd=os.path.dirname(setup),
+        [sys.executable, "-m", "build", "--sdist", "--wheel", "--outdir", dist],
+        cwd=target.dir,
         check=True,
     )
 
     # Check some files were produced
-    dist = target.check_path("dist")
     build = glob.glob(f"{dist}/*")
     assert len(build) > 0, "No built files found"
     logger.info("Will upload {}".format(", ".join(map(os.path.basename, build))))
