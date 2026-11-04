@@ -4,7 +4,7 @@ dockerfile-parse==2.0.1
 multidict==7.2.1
 PyGithub==2.10.0
 pyyaml==6.0.3
-setuptools==84.0.0
+setuptools==84.2.1
 taskcluster==114.0.0
 taskcluster-urls==13.1.0
 twine==7.0.0
