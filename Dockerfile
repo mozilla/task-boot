@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:experimental
-FROM python:3.14-alpine
+FROM python:3.15-alpine
 
 # Setup other deps
 RUN apk add --no-cache git skopeo docker cargo podman cni-plugins fuse-overlayfs e2fsprogs zstd \
