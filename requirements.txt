@@ -5,7 +5,7 @@ multidict==7.2.1
 PyGithub==2.10.0
 pyyaml==6.0.3
 setuptools==84.2.1
-taskcluster==114.0.0
+taskcluster==115.0.1
 taskcluster-urls==13.1.0
 twine==7.0.0
 yarl==1.25.1
