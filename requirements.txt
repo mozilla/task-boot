@@ -3,7 +3,7 @@ build==1.6.1
 dockerfile-parse==2.0.1
 multidict==7.2.1
 PyGithub==2.10.0
-pyyaml==6.0.3
+pyyaml==6.0.4
 setuptools==84.2.1
 taskcluster==114.0.0
 taskcluster-urls==13.1.0
